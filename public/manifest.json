@@ -1,0 +1,31 @@
+{
+    "name": "Malboos",
+    "short_name": "ملبوس",
+    "description": "Omani Traditional Clothing Management, POS & Rental System",
+    "start_url": "/ar/dashboard",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "any",
+    "background_color": "#020617",
+    "theme_color": "#d88030",
+    "dir": "auto",
+    "lang": "ar",
+    "categories": [
+        "business",
+        "finance"
+    ],
+    "icons": [
+        {
+            "src": "/icons/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icons/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}

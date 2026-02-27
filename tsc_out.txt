@@ -1,0 +1,8 @@
+src/app/[locale]/(dashboard)/rentals/page.tsx(126,67): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { size?: number | undefined; }, context?: any): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | ... 4 more ... | undefined', gave the following error.
+    Type '{ size: number; style: { color: string; }; }' is not assignable to type 'IntrinsicAttributes & { size?: number | undefined; }'.
+      Property 'style' does not exist on type 'IntrinsicAttributes & { size?: number | undefined; }'.
+  Overload 2 of 2, '(props: { size?: number | undefined; }): string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | ... 4 more ... | undefined', gave the following error.
+    Type '{ size: number; style: { color: string; }; }' is not assignable to type 'IntrinsicAttributes & { size?: number | undefined; }'.
+      Property 'style' does not exist on type 'IntrinsicAttributes & { size?: number | undefined; }'.
+src/app/[locale]/(dashboard)/settings/page.tsx(182,89): error TS2339: Property 'user_id' does not exist on type '{ id: string; auth_user_id: string; full_name: string; email: string; phone: string | null; role: UserRole; shop_id: string | null; branch_id: string | null; created_at: string; }'.
