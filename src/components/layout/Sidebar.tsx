@@ -63,27 +63,24 @@ export default function Sidebar() {
         >
             {/* Logo Area */}
             <div
-                className={`flex items-center px-4 shrink-0 ${collapsed ? "justify-center" : "gap-3"}`}
+                className="flex items-center gap-3 px-4 shrink-0"
                 style={{
                     height: "var(--header-height)",
                     borderBottom: "1px solid rgba(148, 163, 184, 0.08)",
                 }}
             >
-                {!collapsed ? (
-                    <img
-                        src="/logo.png"
-                        alt="Malboos"
-                        className="h-9 w-auto object-contain drop-shadow-sm max-w-[160px]"
-                    />
-                ) : (
-                    <div
-                        className="flex items-center justify-center w-9 h-9 rounded-xl shrink-0"
-                        style={{
-                            background: "linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700))",
-                        }}
-                    >
-                        <span className="text-base font-bold text-white">م</span>
-                    </div>
+                <div
+                    className="flex items-center justify-center w-9 h-9 rounded-xl shrink-0"
+                    style={{
+                        background: "linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700))",
+                    }}
+                >
+                    <span className="text-base font-bold text-white">M</span>
+                </div>
+                {!collapsed && (
+                    <span className="text-lg font-bold text-white whitespace-nowrap">
+                        {locale === "ar" ? "ملبوس" : "Malboos"}
+                    </span>
                 )}
             </div>
 
