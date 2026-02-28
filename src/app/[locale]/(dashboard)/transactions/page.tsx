@@ -3,11 +3,11 @@
 import React, { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTransactions } from "@/hooks/useSupabase";
+import { useTransactions, useDeleteTransaction } from "@/hooks/useSupabase";
 import { createClient } from "@/lib/supabase/client";
 import {
     Receipt, Search, ShoppingCart, CalendarClock, Banknote, CreditCard,
-    ArrowRightLeft, Loader2, Eye, Pencil, X, Check, Filter,
+    ArrowRightLeft, Loader2, Eye, Pencil, X, Check, Filter, Trash2,
 } from "lucide-react";
 
 const supabase = createClient();
@@ -20,6 +20,7 @@ export default function TransactionsPage() {
 
     const branchId = profile?.role === "admin" || profile?.role === "owner" ? undefined : profile?.branch_id ?? undefined;
     const { data: transactions, isLoading, refetch } = useTransactions(branchId);
+    const deleteTransaction = useDeleteTransaction();
 
     const [searchQuery, setSearchQuery] = useState("");
     const [typeFilter, setTypeFilter] = useState<"all" | "sale" | "rental_payment" | "rental_deposit" | "refund">("all");
@@ -84,6 +85,12 @@ export default function TransactionsPage() {
             refetch();
         } catch (err) {
             console.error("Edit failed:", err);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (confirm(locale === "ar" ? "هل أنت متأكد من حذف هذه المعاملة بشكل نهائي؟" : "Are you sure you want to permanently delete this transaction?")) {
+            await deleteTransaction.mutateAsync(id);
         }
     };
 
@@ -217,9 +224,14 @@ export default function TransactionsPage() {
                                             </a>
                                         )}
                                         {!isLocked && !isEditing && (
-                                            <button onClick={() => handleEdit(tx)} className="p-2 rounded-lg transition-all" style={{ background: "var(--color-surface-800)" }}>
-                                                <Pencil size={14} style={{ color: "var(--color-surface-400)" }} />
-                                            </button>
+                                            <>
+                                                <button onClick={() => handleEdit(tx)} className="p-2 rounded-lg transition-all hover:scale-105" style={{ background: "var(--color-surface-800)" }} title={locale === "ar" ? "تعديل" : "Edit"}>
+                                                    <Pencil size={14} style={{ color: "var(--color-surface-400)" }} />
+                                                </button>
+                                                <button onClick={() => handleDelete(tx.id as string)} className="p-2 rounded-lg transition-all hover:scale-105" style={{ background: "rgba(239, 68, 68, 0.15)", color: "#f87171" }} title={locale === "ar" ? "حذف" : "Delete"} disabled={deleteTransaction.isPending}>
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </>
                                         )}
                                     </div>
                                 </div>

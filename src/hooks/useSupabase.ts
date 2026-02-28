@@ -224,6 +224,24 @@ export function useCreateTransaction() {
     });
 }
 
+export function useDeleteTransaction() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (id: string) => {
+            const { error } = await supabase.from("transactions").delete().eq("id", id);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["transactions"] });
+            queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+            queryClient.invalidateQueries({ queryKey: ["reports"] });
+            // By deleting the transaction, if the database cascade deletes 
+            // the transaction_items, the inventory quantities won't technically roll back 
+            // automatically unless there's a trigger. But for now this removes the ledger entry.
+        },
+    });
+}
+
 // ============================================================
 // Rentals
 // ============================================================
