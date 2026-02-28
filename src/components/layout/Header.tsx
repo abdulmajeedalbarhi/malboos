@@ -4,30 +4,38 @@ import React from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/routing";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, Globe } from "lucide-react";
+import { useLayout } from "@/contexts/LayoutContext";
+import { Bell, Globe, Menu, X } from "lucide-react";
 
 export default function Header() {
     const t = useTranslations();
     const locale = useLocale();
     const { profile } = useAuth();
+    const { isMobileMenuOpen, toggleMobileMenu } = useLayout();
 
     const otherLocale = locale === "ar" ? "en" : "ar";
     const roleName = profile?.role ? t(`roles.${profile.role}`) : "";
 
     return (
         <header
-            className="fixed top-0 z-30 flex items-center justify-between px-6 glass"
+            className="fixed top-0 z-30 flex items-center justify-between px-4 lg:px-6 glass end-0 lg:start-[var(--sidebar-width)] start-0 transition-all duration-300"
             style={{
                 height: "var(--header-height)",
-                insetInlineStart: "var(--sidebar-width)",
-                insetInlineEnd: 0,
                 borderBottom: "1px solid rgba(148, 163, 184, 0.08)",
             }}
         >
             {/* Left side - Page context */}
             <div className="flex items-center gap-3">
+                <button
+                    onClick={toggleMobileMenu}
+                    className="lg:hidden btn btn-ghost p-2 rounded-xl"
+                    aria-label="Toggle Menu"
+                >
+                    {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                </button>
+
                 {profile && (
-                    <div>
+                    <div className="hidden sm:block">
                         <p className="text-sm font-medium text-white">
                             {t("auth.welcomeBack")}, {profile.full_name}
                         </p>
@@ -39,7 +47,7 @@ export default function Header() {
             </div>
 
             {/* Right side - Actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
                 {/* Notifications */}
                 <button
                     className="relative btn btn-ghost p-2 rounded-xl"

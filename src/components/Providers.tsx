@@ -4,6 +4,8 @@ import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/contexts/AuthContext";
 
+import { LayoutProvider } from "@/contexts/LayoutContext";
+
 function makeQueryClient() {
     return new QueryClient({
         defaultOptions: {
@@ -32,7 +34,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
     return (
         <QueryClientProvider client={queryClient}>
-            <AuthProvider>{children}</AuthProvider>
+            <AuthProvider>
+                <LayoutProvider>
+                    {children}
+                </LayoutProvider>
+            </AuthProvider>
         </QueryClientProvider>
     );
 }

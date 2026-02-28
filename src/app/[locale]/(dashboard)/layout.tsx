@@ -12,12 +12,9 @@ export default function DashboardLayout({
             <Sidebar />
             <Header />
             <main
-                className="pt-[var(--header-height)] transition-all duration-300"
-                style={{
-                    marginInlineStart: "var(--sidebar-width)",
-                }}
+                className="pt-[var(--header-height)] transition-all duration-300 lg:ms-[var(--sidebar-width)] ms-0"
             >
-                <div className="p-6">{children}</div>
+                <div className="p-4 lg:p-6">{children}</div>
             </main>
         </div>
     );
