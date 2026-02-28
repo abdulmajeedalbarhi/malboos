@@ -202,7 +202,11 @@ export default function TransactionsPage() {
                                         </div>
                                         {customerPhoneInfo && (
                                             <a
-                                                href={`https://wa.me/${customerPhoneInfo.replace(/\D/g, '')}?text=${encodeURIComponent(`مرحباً ${customerNameInfo || 'عميلنا العزيز'}، شكرًا لتسوقك من البارحي!\n\nنوع العملية: ${typeInfo.ar}\nالمبلغ الإجمالي: ${tx.final_amount} ر.ع.\n\nنسعد بخدمتكم دائماً.`)}`}
+                                                href={`https://wa.me/${customerPhoneInfo.replace(/\D/g, '')}?text=${encodeURIComponent(
+                                                    locale === "ar"
+                                                        ? `البارحي - فاتورة\n----------------------------------\nمرحباً ${customerNameInfo || 'عميلنا العزيز'}، شكرًا لتسوقك من\nالبارحي!\n\nالنوع: ${typeInfo.ar} 📌\nالتاريخ: ${formatDate(tx.created_at as string).split(',')[0]} 📅\nالعميل: ${customerNameInfo || '—'} 👤\nالهاتف: ${customerPhoneInfo || '—'} 📞\n\nالمجموع الفرعي: ${tx.total_amount} ر.ع 💰\nالخصم: -${tx.discount} ر.ع 🏷️\nالإجمالي: ${tx.final_amount} ر.ع ✅\n\n----------------------------------\nشكراً لاختياركم البارحي! 🙏\n\nنسعد بخدمتكم دائماً`
+                                                        : `Al Barhi - Invoice\n----------------------------------\nWelcome ${customerNameInfo || 'Valued Customer'}, thank you for shopping at\nAl Barhi!\n\nType: ${typeInfo.en} 📌\nDate: ${formatDate(tx.created_at as string).split(',')[0]} 📅\nCustomer: ${customerNameInfo || '—'} 👤\nPhone: ${customerPhoneInfo || '—'} 📞\n\nSubtotal: ${tx.total_amount} OMR 💰\nDiscount: -${tx.discount} OMR 🏷️\nTotal: ${tx.final_amount} OMR ✅\n\n----------------------------------\nThank you for choosing Al Barhi! 🙏\n\nAlways happy to serve you`
+                                                )}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="p-2 rounded-lg transition-all hover:scale-105"

@@ -251,14 +251,9 @@ export default function POSPage() {
                     {lastCheckout && lastCheckout.phone && (
                         <a
                             href={`https://wa.me/${lastCheckout.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
-                                `مرحباً ${lastCheckout.name || 'عميلنا العزيز'}، شكرًا لتسوقك من البارحي!\n` +
-                                `\nنوع العملية: ${lastCheckout.mode === 'sale' ? 'بيع' : 'إيجار'}\n` +
-                                `التفاصيل:\n` +
-                                lastCheckout.items.map((i: any) => `- ${i.name} (x${i.qty}): ${i.price * i.qty} ر.ع.`).join('\n') +
-                                `\n\nالمجموع الفرعي: ${lastCheckout.subtotal} ر.ع.` +
-                                (lastCheckout.discount > 0 ? `\nالخصم: ${lastCheckout.discount} ر.ع.` : '') +
-                                `\nالمبلغ النهائي: ${lastCheckout.total} ر.ع.\n` +
-                                `\nنسعد بخدمتكم دائماً.`
+                                locale === "ar"
+                                    ? `البارحي - فاتورة\n----------------------------------\nمرحباً ${lastCheckout.name || 'عميلنا العزيز'}، شكرًا لتسوقك من\nالبارحي!\n\nالنوع: ${lastCheckout.mode === 'sale' ? 'بيع' : 'إيجار'} 📌\nالتاريخ: ${new Intl.DateTimeFormat('en-OM', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date())} 📅\nالعميل: ${lastCheckout.name || '—'} 👤\nالهاتف: ${lastCheckout.phone || '—'} 📞\n\nالمنتجات: 📦\n${lastCheckout.items.map((i: any, idx: number) => `${idx + 1}. 🧥 ${i.name} × ${i.qty} = ${i.price * i.qty} ر.ع`).join('\n')}\n\nالمجموع الفرعي: ${lastCheckout.subtotal} ر.ع 💰\nالخصم: -${lastCheckout.discount} ر.ع 🏷️\nالإجمالي: ${lastCheckout.total} ر.ع ✅\n\n----------------------------------\nشكراً لاختياركم البارحي! 🙏\n\nنسعد بخدمتكم دائماً`
+                                    : `Al Barhi - Invoice\n----------------------------------\nWelcome ${lastCheckout.name || 'Valued Customer'}, thank you for shopping at\nAl Barhi!\n\nType: ${lastCheckout.mode === 'sale' ? 'Sale' : 'Rental'} 📌\nDate: ${new Intl.DateTimeFormat('en-OM', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date())} 📅\nCustomer: ${lastCheckout.name || '—'} 👤\nPhone: ${lastCheckout.phone || '—'} 📞\n\nItems: 📦\n${lastCheckout.items.map((i: any, idx: number) => `${idx + 1}. 🧥 ${i.name} × ${i.qty} = ${i.price * i.qty} OMR`).join('\n')}\n\nSubtotal: ${lastCheckout.subtotal} OMR 💰\nDiscount: -${lastCheckout.discount} OMR 🏷️\nTotal: ${lastCheckout.total} OMR ✅\n\n----------------------------------\nThank you for choosing Al Barhi! 🙏\n\nAlways happy to serve you`
                             )}`}
                             target="_blank"
                             rel="noopener noreferrer"
