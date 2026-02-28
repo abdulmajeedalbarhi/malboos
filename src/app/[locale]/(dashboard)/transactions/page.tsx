@@ -26,9 +26,12 @@ export default function TransactionsPage() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editNotes, setEditNotes] = useState("");
     const [editDiscount, setEditDiscount] = useState(0);
+    const [editFinal, setEditFinal] = useState(0);
+    const [editTotal, setEditTotal] = useState(0);
+    const [editMethod, setEditMethod] = useState("cash");
 
     const formatCurrency = (amount: number) =>
-        new Intl.NumberFormat(locale === "ar" ? "ar-OM" : "en-OM", { style: "currency", currency: "OMR", minimumFractionDigits: 3 }).format(amount);
+        new Intl.NumberFormat(locale === "ar" ? "ar-OM" : "en-OM", { style: "currency", currency: "OMR", minimumFractionDigits: 1 }).format(amount);
 
     const formatDate = (date: string) =>
         new Intl.DateTimeFormat(locale === "ar" ? "ar-OM" : "en-OM", {
@@ -58,6 +61,9 @@ export default function TransactionsPage() {
         setEditingId(tx.id as string);
         setEditNotes((tx.notes as string) || "");
         setEditDiscount((tx.discount as number) || 0);
+        setEditTotal((tx.total_amount as number) || 0);
+        setEditFinal((tx.final_amount as number) || 0);
+        setEditMethod((tx.payment_method as string) || "cash");
     };
 
     const handleSaveEdit = async () => {
@@ -65,7 +71,13 @@ export default function TransactionsPage() {
         try {
             const { error } = await supabase
                 .from("transactions")
-                .update({ notes: editNotes, discount: editDiscount })
+                .update({
+                    notes: editNotes,
+                    discount: editDiscount,
+                    total_amount: editTotal,
+                    final_amount: editFinal,
+                    payment_method: editMethod
+                })
                 .eq("id", editingId);
             if (error) throw error;
             setEditingId(null);
@@ -210,18 +222,40 @@ export default function TransactionsPage() {
 
                                 {/* Inline Edit */}
                                 {isEditing && (
-                                    <div className="mt-3 pt-3 space-y-2" style={{ borderTop: "1px solid var(--color-surface-700)" }}>
-                                        <div className="grid grid-cols-3 gap-2">
-                                            <div className="col-span-2">
+                                    <div className="mt-3 pt-3 space-y-3" style={{ borderTop: "1px solid var(--color-surface-700)" }}>
+                                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                                            <div>
+                                                <label className="text-xs mb-1 block" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "المجموع الفرعي" : "Subtotal"}</label>
+                                                <input className="input" type="number" step="0.5" dir="ltr" style={{ fontSize: "0.8rem", padding: "0.5rem" }} value={editTotal} onChange={(e) => setEditTotal(parseFloat(e.target.value) || 0)} />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs mb-1 block" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "الخصم" : "Discount"}</label>
+                                                <input className="input" type="number" step="0.5" dir="ltr" style={{ fontSize: "0.8rem", padding: "0.5rem" }} value={editDiscount} onChange={(e) => {
+                                                    const disc = parseFloat(e.target.value) || 0;
+                                                    setEditDiscount(disc);
+                                                    setEditFinal(Math.max(0, editTotal - disc));
+                                                }} />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs mb-1 block" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "النهائي" : "Total"}</label>
+                                                <input className="input" type="number" step="0.5" dir="ltr" style={{ fontSize: "0.8rem", padding: "0.5rem", color: "var(--color-brand-400)", fontWeight: "bold" }} value={editFinal} onChange={(e) => setEditFinal(parseFloat(e.target.value) || 0)} />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs mb-1 block" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "طريقة الدفع" : "Payment"}</label>
+                                                <select className="input" style={{ fontSize: "0.8rem", padding: "0.5rem" }} value={editMethod} onChange={(e) => setEditMethod(e.target.value)}>
+                                                    <option value="cash">{locale === "ar" ? "نقدي" : "Cash"}</option>
+                                                    <option value="card">{locale === "ar" ? "بطاقة" : "Card"}</option>
+                                                    <option value="transfer">{locale === "ar" ? "تحويل" : "Transfer"}</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 gap-2">
+                                            <div>
                                                 <label className="text-xs mb-1 block" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "ملاحظات" : "Notes"}</label>
                                                 <input className="input" style={{ fontSize: "0.8rem", padding: "0.5rem" }} value={editNotes} onChange={(e) => setEditNotes(e.target.value)} />
                                             </div>
-                                            <div>
-                                                <label className="text-xs mb-1 block" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "خصم" : "Discount"}</label>
-                                                <input className="input" type="number" step="0.001" dir="ltr" style={{ fontSize: "0.8rem", padding: "0.5rem" }} value={editDiscount} onChange={(e) => setEditDiscount(parseFloat(e.target.value) || 0)} />
-                                            </div>
                                         </div>
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-2 justify-end pt-1">
                                             <button onClick={handleSaveEdit} className="btn btn-sm flex items-center gap-1" style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "white" }}>
                                                 <Check size={14} />{tc("save")}
                                             </button>

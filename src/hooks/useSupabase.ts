@@ -365,46 +365,39 @@ export function useDashboardStats(branchId?: string) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            // Total sales today
-            let salesQuery = supabase
-                .from("transactions")
-                .select("final_amount")
-                .gte("created_at", today.toISOString())
-                .eq("type", "sale");
+            // Prepare all queries
+            let salesQuery = supabase.from("transactions").select("final_amount").gte("created_at", today.toISOString()).eq("type", "sale");
             if (branchId) salesQuery = salesQuery.eq("branch_id", branchId);
-            const { data: salesData } = await salesQuery;
-            const totalSales = (salesData as any[])?.reduce((sum: number, t: any) => sum + (t.final_amount || 0), 0) || 0;
 
-            // Active rentals
-            let rentalsQuery = supabase
-                .from("rentals")
-                .select("id", { count: "exact" })
-                .eq("status", "active");
+            let rentalsQuery = supabase.from("rentals").select("id", { count: "exact", head: true }).eq("status", "active");
             if (branchId) rentalsQuery = rentalsQuery.eq("branch_id", branchId);
-            const { count: activeRentals } = await rentalsQuery;
 
-            // Overdue rentals
-            let overdueQuery = supabase
-                .from("rentals")
-                .select("id", { count: "exact" })
-                .eq("status", "overdue");
+            let overdueQuery = supabase.from("rentals").select("id", { count: "exact", head: true }).eq("status", "overdue");
             if (branchId) overdueQuery = overdueQuery.eq("branch_id", branchId);
-            const { count: overdueRentals } = await overdueQuery;
 
-            // Total revenue (all time)
-            let revenueQuery = supabase
-                .from("transactions")
-                .select("final_amount");
+            let revenueQuery = supabase.from("transactions").select("final_amount");
             if (branchId) revenueQuery = revenueQuery.eq("branch_id", branchId);
-            const { data: revenueData } = await revenueQuery;
-            const totalRevenue = (revenueData as any[])?.reduce((sum: number, t: any) => sum + (t.final_amount || 0), 0) || 0;
 
-            // Inventory counts by category
-            let invQuery = supabase
-                .from("inventory_items")
-                .select("category_id, categories(name, name_ar)");
+            let invQuery = supabase.from("inventory_items").select("category_id, categories(name, name_ar)");
             if (branchId) invQuery = invQuery.eq("branch_id", branchId);
-            const { data: invData } = await invQuery;
+
+            // Execute all queries concurrently
+            const [
+                { data: salesData },
+                { count: activeRentals },
+                { count: overdueRentals },
+                { data: revenueData },
+                { data: invData }
+            ] = await Promise.all([
+                salesQuery,
+                rentalsQuery,
+                overdueQuery,
+                revenueQuery,
+                invQuery
+            ]);
+
+            const totalSales = (salesData as any[])?.reduce((sum: number, t: any) => sum + (t.final_amount || 0), 0) || 0;
+            const totalRevenue = (revenueData as any[])?.reduce((sum: number, t: any) => sum + (t.final_amount || 0), 0) || 0;
 
             const inventorySummary: Record<string, { name: string; name_ar: string; count: number }> = {};
             (invData as any[])?.forEach((item: any) => {

@@ -37,6 +37,7 @@ export default function POSPage() {
     const [cart, setCart] = useState<CartItem[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "transfer">("cash");
+    const [discount, setDiscount] = useState<number>(0);
 
     // Inline customer info
     const [customerName, setCustomerName] = useState("");
@@ -51,10 +52,10 @@ export default function POSPage() {
     // UI state
     const [showSuccess, setShowSuccess] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
-    const [lastCheckout, setLastCheckout] = useState<{ name: string, phone: string, mode: string, total: number } | null>(null);
+    const [lastCheckout, setLastCheckout] = useState<any>(null);
 
     const formatCurrency = (amount: number) =>
-        new Intl.NumberFormat(locale === "ar" ? "ar-OM" : "en-OM", { style: "currency", currency: "OMR", minimumFractionDigits: 3 }).format(amount);
+        new Intl.NumberFormat(locale === "ar" ? "ar-OM" : "en-OM", { style: "currency", currency: "OMR", minimumFractionDigits: 1 }).format(amount);
 
     // Filter items based on mode + search
     const availableItems = inventory?.filter((item: Record<string, unknown>) => {
@@ -101,7 +102,8 @@ export default function POSPage() {
         ? Math.max(1, Math.ceil((new Date(returnDate).getTime() - new Date(bookingDate).getTime()) / (1000 * 60 * 60 * 24)))
         : 1;
 
-    const total = mode === "rental" ? subtotal * rentalDays : subtotal;
+    const baseTotal = mode === "rental" ? subtotal * rentalDays : subtotal;
+    const total = Math.max(0, baseTotal - discount);
 
     const handleCheckout = async () => {
         if (!branchId || !profile?.id || cart.length === 0) return;
@@ -137,7 +139,7 @@ export default function POSPage() {
                         financial_period_id: null,
                         type: "sale",
                         total_amount: subtotal,
-                        discount: 0,
+                        discount: discount,
                         final_amount: total,
                         payment_method: paymentMethod,
                         notes: customerName ? `${customerName} - ${customerPhone}` : null,
@@ -187,7 +189,7 @@ export default function POSPage() {
                         financial_period_id: null,
                         type: "rental_payment",
                         total_amount: subtotal * rentalDays,
-                        discount: 0,
+                        discount: discount,
                         final_amount: total,
                         payment_method: paymentMethod,
                         notes: `Rental - ${customerName ? customerName : ''}`,
@@ -208,7 +210,14 @@ export default function POSPage() {
                 name: customerName,
                 phone: customerPhone,
                 mode: mode,
-                total: total
+                total: total,
+                subtotal: baseTotal,
+                discount: discount,
+                items: cart.map(c => ({
+                    name: locale === "ar" ? c.name_ar : c.name,
+                    qty: c.quantity,
+                    price: mode === "rental" ? c.price * rentalDays : c.price
+                }))
             });
 
             // Reset form
@@ -218,6 +227,7 @@ export default function POSPage() {
             setCustomerId("");
             setReturnDate("");
             setRentalRemarks("");
+            setDiscount(0);
             setShowSuccess(true);
             setTimeout(() => {
                 setShowSuccess(false);
@@ -240,7 +250,16 @@ export default function POSPage() {
                     </div>
                     {lastCheckout && lastCheckout.phone && (
                         <a
-                            href={`https://wa.me/${lastCheckout.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`مرحباً ${lastCheckout.name || 'عميلنا العزيز'}، شكرًا لتسوقك من البارحي!\n\nنوع العملية: ${lastCheckout.mode === 'sale' ? 'بيع' : 'إيجار'}\nالمبلغ الإجمالي: ${lastCheckout.total} ر.ع.\n\nنسعد بخدمتكم دائماً.`)}`}
+                            href={`https://wa.me/${lastCheckout.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                                `مرحباً ${lastCheckout.name || 'عميلنا العزيز'}، شكرًا لتسوقك من البارحي!\n` +
+                                `\nنوع العملية: ${lastCheckout.mode === 'sale' ? 'بيع' : 'إيجار'}\n` +
+                                `التفاصيل:\n` +
+                                lastCheckout.items.map((i: any) => `- ${i.name} (x${i.qty}): ${i.price * i.qty} ر.ع.`).join('\n') +
+                                `\n\nالمجموع الفرعي: ${lastCheckout.subtotal} ر.ع.` +
+                                (lastCheckout.discount > 0 ? `\nالخصم: ${lastCheckout.discount} ر.ع.` : '') +
+                                `\nالمبلغ النهائي: ${lastCheckout.total} ر.ع.\n` +
+                                `\nنسعد بخدمتكم دائماً.`
+                            )}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-2 px-6 py-3 rounded-xl shadow-lg font-medium transition-all hover:scale-105"
@@ -447,6 +466,14 @@ export default function POSPage() {
                                     <span className="text-white">{rentalDays} {locale === "ar" ? "يوم" : "days"}</span>
                                 </div>
                             )}
+                            <div className="flex justify-between text-sm pt-2" style={{ borderTop: "1px solid var(--color-surface-700)" }}>
+                                <span style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "المجموع الفرعي" : "Subtotal"}</span>
+                                <span className="text-white">{formatCurrency(baseTotal)}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                                <span style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "الخصم" : "Discount"}</span>
+                                <input className="input w-24 text-end" type="number" min="0" step="0.5" style={{ padding: "0.25rem 0.5rem", height: "auto" }} value={discount || ""} onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)} />
+                            </div>
                             <div className="flex justify-between text-base font-bold pt-2" style={{ borderTop: "1px solid var(--color-surface-700)" }}>
                                 <span className="text-white">{t("totalAmount")}</span>
                                 <span style={{ color: "var(--color-brand-400)" }}>{formatCurrency(total)}</span>

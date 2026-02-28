@@ -33,7 +33,7 @@ export default function SettingsPage() {
     const [loadingUsers, setLoadingUsers] = useState(true);
     const [showAddUser, setShowAddUser] = useState(false);
     const [editingUserId, setEditingUserId] = useState<string | null>(null);
-    const [newUser, setNewUser] = useState({ full_name: "", email: "", phone: "", role: "cashier", branch_id: "" });
+    const [newUser, setNewUser] = useState({ full_name: "", email: "", password: "", phone: "", role: "cashier", branch_id: "" });
     const [editUser, setEditUser] = useState<any>({});
     const [saving, setSaving] = useState(false);
     const [successMsg, setSuccessMsg] = useState("");
@@ -54,22 +54,56 @@ export default function SettingsPage() {
         e.preventDefault();
         setSaving(true);
         try {
-            // We create the user profile directly (Supabase Auth user creation needs admin API)
-            // For now, create a profile entry that can be linked when the user signs up
-            const { error } = await supabase.from("user_profiles").insert({
-                auth_user_id: crypto.randomUUID(), // placeholder until auth user is created
+            // 1. We must isolate the auth client so we don't log out the admin
+            const { createClient: createSupClient } = await import("@supabase/supabase-js");
+            const tempClient = createSupClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+                { auth: { persistSession: false, autoRefreshToken: false } }
+            );
+
+            // 2. Sign up the user in Supabase Auth
+            const { data: authData, error: authError } = await tempClient.auth.signUp({
+                email: newUser.email,
+                password: newUser.password,
+            });
+
+            if (authError) throw authError;
+
+            const authUserId = authData.user?.id;
+            if (!authUserId) throw new Error("Failed to create auth user");
+
+            // Wait 1 second to allow the DB trigger to create the user_profile
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // 3. Update the newly created profile with the role, branch, and phone
+            const { error: profileError } = await supabase.from("user_profiles").update({
                 full_name: newUser.full_name,
                 role: newUser.role,
                 branch_id: newUser.branch_id || null,
                 phone: newUser.phone || null,
-                avatar_url: null,
-            });
-            if (error) throw error;
+            }).eq("auth_user_id", authUserId);
+
+            if (profileError) {
+                // If trigger didn't exist, we insert manually
+                const { error: insertErr } = await supabase.from("user_profiles").insert({
+                    auth_user_id: authUserId,
+                    full_name: newUser.full_name,
+                    role: newUser.role,
+                    branch_id: newUser.branch_id || null,
+                    phone: newUser.phone || null,
+                });
+                if (insertErr) throw insertErr;
+            }
+
             setShowAddUser(false);
-            setNewUser({ full_name: "", email: "", phone: "", role: "cashier", branch_id: "" });
-            showSuccess(locale === "ar" ? "تم إضافة المستخدم" : "User added");
+            setNewUser({ full_name: "", email: "", password: "", phone: "", role: "cashier", branch_id: "" });
+            showSuccess(locale === "ar" ? "تم إضافة المستخدم بنجاح" : "User added successfully");
             fetchUsers();
-        } catch (err) { console.error(err); }
+        } catch (err: any) {
+            console.error(err);
+            alert(locale === "ar" ? "خطأ أثناء إضافة المستخدم: " + err.message : "Error adding user: " + err.message);
+        }
         setSaving(false);
     };
 
@@ -248,29 +282,44 @@ export default function SettingsPage() {
                             {/* Add User Modal */}
                             {showAddUser && (
                                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)" }} onClick={() => setShowAddUser(false)}>
-                                    <div className="glass rounded-2xl p-6 w-full max-w-md animate-fade-in" onClick={(e) => e.stopPropagation()}>
+                                    <div className="glass rounded-2xl p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto animate-fade-in" onClick={(e) => e.stopPropagation()}>
                                         <div className="flex items-center justify-between mb-5">
                                             <h2 className="text-lg font-bold text-white">{locale === "ar" ? "إضافة مستخدم جديد" : "Add New User"}</h2>
                                             <button onClick={() => setShowAddUser(false)}><X size={20} style={{ color: "var(--color-surface-400)" }} /></button>
                                         </div>
                                         <form onSubmit={handleAddUser} className="space-y-4">
-                                            <div><label className="label">{locale === "ar" ? "الاسم الكامل" : "Full Name"}</label>
-                                                <input className="input" value={newUser.full_name} onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })} required /></div>
-                                            <div><label className="label">{locale === "ar" ? "الهاتف" : "Phone"}</label>
-                                                <input className="input" dir="ltr" value={newUser.phone} onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })} /></div>
-                                            <div><label className="label">{locale === "ar" ? "الدور" : "Role"}</label>
-                                                <select className="input" value={newUser.role} onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}>
-                                                    {ROLES.map(r => (<option key={r.value} value={r.value}>{locale === "ar" ? r.ar : r.en}</option>))}
-                                                </select></div>
-                                            <div><label className="label">{locale === "ar" ? "الفرع" : "Branch"}</label>
-                                                <select className="input" value={newUser.branch_id} onChange={(e) => setNewUser({ ...newUser, branch_id: e.target.value })}>
-                                                    <option value="">{locale === "ar" ? "جميع الفروع" : "All Branches"}</option>
-                                                    {branches?.map((b: any) => (<option key={b.id} value={b.id}>{locale === "ar" ? b.name_ar : b.name}</option>))}
-                                                </select></div>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div><label className="label">{locale === "ar" ? "الاسم الكامل" : "Full Name"}</label>
+                                                    <input className="input" value={newUser.full_name} onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })} required /></div>
+                                                <div><label className="label">{locale === "ar" ? "الهاتف" : "Phone"}</label>
+                                                    <input className="input" dir="ltr" value={newUser.phone} onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })} /></div>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div><label className="label">{locale === "ar" ? "البريد الإلكتروني" : "Email"}</label>
+                                                    <input type="email" dir="ltr" className="input" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} required /></div>
+                                                <div><label className="label">{locale === "ar" ? "كلمة المرور" : "Password"}</label>
+                                                    <input type="password" dir="ltr" className="input" minLength={6} value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} required /></div>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div><label className="label">{locale === "ar" ? "الدور" : "Role"}</label>
+                                                    <select className="input" value={newUser.role} onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}>
+                                                        {ROLES.map(r => (<option key={r.value} value={r.value}>{locale === "ar" ? r.ar : r.en}</option>))}
+                                                    </select></div>
+                                                <div><label className="label">{locale === "ar" ? "الفرع" : "Branch"}</label>
+                                                    <select className="input" value={newUser.branch_id} onChange={(e) => setNewUser({ ...newUser, branch_id: e.target.value })}>
+                                                        <option value="">{locale === "ar" ? "جميع الفروع" : "All Branches"}</option>
+                                                        {branches?.map((b: any) => (<option key={b.id} value={b.id}>{locale === "ar" ? b.name_ar : b.name}</option>))}
+                                                    </select></div>
+                                                <div className="col-span-2 pt-2 text-xs" style={{ color: "var(--color-surface-400)" }}>
+                                                    {locale === "ar" ?
+                                                        "سيتم إنشاء حساب جديد للدخول باستخدام البريد الإلكتروني وكلمة المرور أعلاه. يمكنك تغيير الصلاحيات لاحقاً." :
+                                                        "A login account will be generated. The user can sign in using the Email and Password provided."}
+                                                </div>
+                                            </div>
                                             <div className="flex gap-3 pt-2">
                                                 <button type="submit" className="btn btn-primary flex-1" disabled={saving}>
                                                     {saving ? <Loader2 size={16} className="animate-spin" /> : <UserPlus size={16} />}
-                                                    {locale === "ar" ? "إضافة" : "Add User"}
+                                                    {locale === "ar" ? "إضافة وحفظ" : "Add User"}
                                                 </button>
                                                 <button type="button" onClick={() => setShowAddUser(false)} className="btn btn-secondary">{locale === "ar" ? "إلغاء" : "Cancel"}</button>
                                             </div>
