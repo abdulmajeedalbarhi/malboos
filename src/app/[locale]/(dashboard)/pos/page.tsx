@@ -97,12 +97,13 @@ export default function POSPage() {
 
     const subtotal = cart.reduce((sum, c) => sum + c.price * c.quantity, 0);
 
-    // Calculate rental days
+    // Calculate rental days (kept for UI duration display if needed)
     const rentalDays = bookingDate && returnDate
         ? Math.max(1, Math.ceil((new Date(returnDate).getTime() - new Date(bookingDate).getTime()) / (1000 * 60 * 60 * 24)))
         : 1;
 
-    const baseTotal = mode === "rental" ? subtotal * rentalDays : subtotal;
+    // Price is flat per item quantity, regardless of duration
+    const baseTotal = subtotal;
     const total = Math.max(0, baseTotal - discount);
 
     const handleCheckout = async () => {
@@ -166,7 +167,7 @@ export default function POSPage() {
                         returned_date: null,
                         status: "active",
                         deposit_paid: 0,
-                        rental_fee: item.price * rentalDays,
+                        rental_fee: item.price,
                         overdue_fee: 0,
                         notes: JSON.stringify({
                             customer_name: customerName,
@@ -188,7 +189,7 @@ export default function POSPage() {
                         customer_id: finalCustomerId,
                         financial_period_id: null,
                         type: "rental_payment",
-                        total_amount: subtotal * rentalDays,
+                        total_amount: subtotal,
                         discount: discount,
                         final_amount: total,
                         payment_method: paymentMethod,
@@ -198,8 +199,8 @@ export default function POSPage() {
                     items: cart.map((c) => ({
                         inventory_item_id: c.inventory_item_id,
                         quantity: c.quantity,
-                        unit_price: c.price * rentalDays,
-                        subtotal: (c.price * rentalDays) * c.quantity,
+                        unit_price: c.price,
+                        subtotal: c.price * c.quantity,
                     })),
                 });
 
@@ -216,7 +217,7 @@ export default function POSPage() {
                 items: cart.map(c => ({
                     name: locale === "ar" ? c.name_ar : c.name,
                     qty: c.quantity,
-                    price: mode === "rental" ? c.price * rentalDays : c.price
+                    price: c.price
                 }))
             });
 
@@ -252,8 +253,8 @@ export default function POSPage() {
                         <a
                             href={`https://wa.me/${lastCheckout.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
                                 locale === "ar"
-                                    ? `البارحي - فاتورة\n----------------------------------\nمرحباً ${lastCheckout.name || 'عميلنا العزيز'}، شكرًا لتسوقك من\nالبارحي!\n\nالنوع: ${lastCheckout.mode === 'sale' ? 'بيع' : 'إيجار'} 📌\nالتاريخ: ${new Intl.DateTimeFormat('en-OM', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date())} 📅\nالعميل: ${lastCheckout.name || '—'} 👤\nالهاتف: ${lastCheckout.phone || '—'} 📞\n\nالمنتجات: 📦\n${lastCheckout.items.map((i: any, idx: number) => `${idx + 1}. 🧥 ${i.name} × ${i.qty} = ${i.price * i.qty} ر.ع`).join('\n')}\n\nالمجموع الفرعي: ${lastCheckout.subtotal} ر.ع 💰\nالخصم: -${lastCheckout.discount} ر.ع 🏷️\nالإجمالي: ${lastCheckout.total} ر.ع ✅\n\n----------------------------------\nشكراً لاختياركم البارحي! 🙏\n\nنسعد بخدمتكم دائماً`
-                                    : `Al Barhi - Invoice\n----------------------------------\nWelcome ${lastCheckout.name || 'Valued Customer'}, thank you for shopping at\nAl Barhi!\n\nType: ${lastCheckout.mode === 'sale' ? 'Sale' : 'Rental'} 📌\nDate: ${new Intl.DateTimeFormat('en-OM', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date())} 📅\nCustomer: ${lastCheckout.name || '—'} 👤\nPhone: ${lastCheckout.phone || '—'} 📞\n\nItems: 📦\n${lastCheckout.items.map((i: any, idx: number) => `${idx + 1}. 🧥 ${i.name} × ${i.qty} = ${i.price * i.qty} OMR`).join('\n')}\n\nSubtotal: ${lastCheckout.subtotal} OMR 💰\nDiscount: -${lastCheckout.discount} OMR 🏷️\nTotal: ${lastCheckout.total} OMR ✅\n\n----------------------------------\nThank you for choosing Al Barhi! 🙏\n\nAlways happy to serve you`
+                                    ? `البارحي - فاتورة\n----------------------------------\nمرحباً ${lastCheckout.name || 'عميلنا العزيز'}، شكرًا لتسوقك من\nالبارحي!\n\nالنوع: ${lastCheckout.mode === 'sale' ? 'بيع' : 'إيجار'} 📌\nالتاريخ: ${new Intl.DateTimeFormat('en-OM', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date())} 📅\nالعميل: ${lastCheckout.name || '—'} 👤\nالهاتف: ${lastCheckout.phone || '—'} 📞\n\nالمنتجات: 📦\n${lastCheckout.items.map((i: any, idx: number) => `${idx + 1}. 🧥 ${i.name} × ${i.qty} = ${i.price * i.qty} ر.ع`).join('\n')}\n\nالمجموع الفرعي: ${lastCheckout.subtotal} ر.ع 💰\nالخصم: -${lastCheckout.discount} ر.ع 🏷️\nالإجمالي: ${lastCheckout.total} ر.ع ✅\n\n----------------------------------\n${lastCheckout.mode === 'rental' ? '⚠️ تنبيه تأخير الإرجاع:\nفي حال التأخر عن موعد الإرجاع، سيتم احتساب غرامة يومية تعادل قيمة إيجار القطعة لكل يوم تأخير إضافي.\n\n----------------------------------\n' : ''}شكراً لاختياركم البارحي! 🙏\n\nنسعد بخدمتكم دائماً`
+                                    : `Al Barhi - Invoice\n----------------------------------\nWelcome ${lastCheckout.name || 'Valued Customer'}, thank you for shopping at\nAl Barhi!\n\nType: ${lastCheckout.mode === 'sale' ? 'Sale' : 'Rental'} 📌\nDate: ${new Intl.DateTimeFormat('en-OM', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date())} 📅\nCustomer: ${lastCheckout.name || '—'} 👤\nPhone: ${lastCheckout.phone || '—'} 📞\n\nItems: 📦\n${lastCheckout.items.map((i: any, idx: number) => `${idx + 1}. 🧥 ${i.name} × ${i.qty} = ${i.price * i.qty} OMR`).join('\n')}\n\nSubtotal: ${lastCheckout.subtotal} OMR 💰\nDiscount: -${lastCheckout.discount} OMR 🏷️\nTotal: ${lastCheckout.total} OMR ✅\n\n----------------------------------\n${lastCheckout.mode === 'rental' ? '⚠️ Overdue Notice:\nIf the item is not returned by the due date, a daily penalty equal to the item\'s rental price will be charged for each additional day.\n\n----------------------------------\n' : ''}Thank you for choosing Al Barhi! 🙏\n\nAlways happy to serve you`
                             )}`}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -334,7 +335,7 @@ export default function POSPage() {
                                         <p className="text-sm font-bold" style={{ color: "var(--color-brand-400)" }}>
                                             {mode === "sale"
                                                 ? formatCurrency(product.sale_price as number)
-                                                : <>{formatCurrency(product.rental_price_daily as number)}<span className="text-xs font-normal" style={{ color: "var(--color-surface-400)" }}>/{locale === "ar" ? "يوم" : "day"}</span></>
+                                                : formatCurrency(product.rental_price_daily as number)
                                             }
                                         </p>
                                         <span className="text-[10px] px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{
@@ -389,10 +390,10 @@ export default function POSPage() {
                                             <button onClick={() => updateQuantity(item.id, 1)} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "var(--color-surface-700)" }}><Plus size={12} className="text-white" /></button>
                                         </div>
                                     ) : (
-                                        <span className="text-xs" style={{ color: "var(--color-surface-400)" }}>{formatCurrency(item.price)}/{locale === "ar" ? "يوم" : "day"}</span>
+                                        <span className="text-xs" style={{ color: "var(--color-surface-400)" }}>{formatCurrency(item.price)}</span>
                                     )}
                                     <span className="text-sm font-semibold text-white">
-                                        {mode === "sale" ? formatCurrency(item.price * item.quantity) : formatCurrency(item.price * rentalDays)}
+                                        {formatCurrency(item.price * item.quantity)}
                                     </span>
                                 </div>
                             </div>
