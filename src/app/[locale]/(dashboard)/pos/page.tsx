@@ -231,7 +231,7 @@ export default function POSPage() {
     const isProcessing = createTransaction.isPending || createRental.isPending;
 
     return (
-        <div className="flex gap-6 animate-fade-in" style={{ minHeight: "calc(100vh - var(--header-height) - 3rem)" }}>
+        <div className="flex flex-col lg:flex-row gap-6 animate-fade-in" style={{ minHeight: "calc(100vh - var(--header-height) - 3rem)" }}>
             {/* Success Toast */}
             {showSuccess && (
                 <div className="fixed top-20 inset-x-0 z-50 flex flex-col items-center gap-3 animate-fade-in">
@@ -256,7 +256,7 @@ export default function POSPage() {
             {/* Product Grid */}
             <div className="flex-1 space-y-4">
                 {/* Header + Mode Toggle */}
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <div className="flex items-center justify-center w-10 h-10 rounded-xl" style={{ background: "rgba(216, 128, 48, 0.15)" }}>
                             {mode === "sale" ? <ShoppingCart size={22} style={{ color: "var(--color-brand-400)" }} /> : <CalendarClock size={22} style={{ color: "var(--color-brand-400)" }} />}
@@ -265,14 +265,14 @@ export default function POSPage() {
                     </div>
 
                     {/* Sale / Rent Toggle */}
-                    <div className="flex p-1 rounded-xl" style={{ background: "var(--color-surface-900)" }}>
-                        <button onClick={() => { setMode("sale"); setCart([]); }} className="px-5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2" style={{
+                    <div className="flex p-1 rounded-xl w-full sm:w-auto" style={{ background: "var(--color-surface-900)" }}>
+                        <button onClick={() => { setMode("sale"); setCart([]); }} className="flex-1 sm:flex-none px-5 py-2 rounded-lg text-sm font-semibold transition-all flex justify-center items-center gap-2" style={{
                             background: mode === "sale" ? "linear-gradient(135deg, #10b981, #059669)" : "transparent",
                             color: mode === "sale" ? "white" : "var(--color-surface-400)",
                         }}>
                             <Tag size={16} /> {locale === "ar" ? "بيع" : "Sale"}
                         </button>
-                        <button onClick={() => { setMode("rental"); setCart([]); }} className="px-5 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2" style={{
+                        <button onClick={() => { setMode("rental"); setCart([]); }} className="flex-1 sm:flex-none px-5 py-2 rounded-lg text-sm font-semibold transition-all flex justify-center items-center gap-2" style={{
                             background: mode === "rental" ? "linear-gradient(135deg, #3b82f6, #2563eb)" : "transparent",
                             color: mode === "rental" ? "white" : "var(--color-surface-400)",
                         }}>
@@ -301,7 +301,7 @@ export default function POSPage() {
                         </p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
                         {availableItems.map((product: Record<string, unknown>) => {
                             const isInCart = cart.some((c) => c.inventory_item_id === (product.id as string));
                             return (
@@ -323,7 +323,7 @@ export default function POSPage() {
                                                 : <>{formatCurrency(product.rental_price_daily as number)}<span className="text-xs font-normal" style={{ color: "var(--color-surface-400)" }}>/{locale === "ar" ? "يوم" : "day"}</span></>
                                             }
                                         </p>
-                                        <span className="text-xs px-2 py-0.5 rounded-full" style={{
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{
                                             background: (product.item_type as string) === "both" ? "rgba(168, 85, 247, 0.15)" : mode === "sale" ? "rgba(16, 185, 129, 0.15)" : "rgba(59, 130, 246, 0.15)",
                                             color: (product.item_type as string) === "both" ? "#c084fc" : mode === "sale" ? "#34d399" : "#60a5fa",
                                         }}>
@@ -344,7 +344,7 @@ export default function POSPage() {
             </div>
 
             {/* Cart Sidebar */}
-            <div className="w-[380px] shrink-0 flex flex-col glass rounded-2xl" style={{ position: "sticky", top: "calc(var(--header-height) + 1.5rem)", maxHeight: "calc(100vh - var(--header-height) - 3rem)" }}>
+            <div className="w-full lg:w-[380px] shrink-0 flex flex-col glass rounded-2xl lg:sticky" style={{ top: "calc(var(--header-height) + 1.5rem)", maxHeight: "calc(100vh - var(--header-height) - 3rem)" }}>
                 <div className="p-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(148, 163, 184, 0.08)" }}>
                     <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                         {mode === "sale" ? <ShoppingCart size={20} /> : <CalendarClock size={20} />}

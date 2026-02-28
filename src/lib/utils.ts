@@ -15,8 +15,8 @@ export function formatCurrency(amount: number, locale: string = "ar-OM"): string
     return new Intl.NumberFormat(locale, {
         style: "currency",
         currency: "OMR",
-        minimumFractionDigits: 3,
-        maximumFractionDigits: 3,
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
     }).format(amount);
 }
 

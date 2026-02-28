@@ -138,11 +138,11 @@ export default function SettingsPage() {
                 <h1 className="text-2xl font-bold text-white">{locale === "ar" ? "الإعدادات" : "Settings"}</h1>
             </div>
 
-            <div className="flex gap-6">
+            <div className="flex flex-col md:flex-row gap-6">
                 {/* Sidebar */}
-                <div className="w-56 shrink-0 space-y-1">
+                <div className="w-full md:w-56 shrink-0 flex md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
                     {sections.map(s => (
-                        <button key={s.key} onClick={() => setActiveSection(s.key)} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all" style={{
+                        <button key={s.key} onClick={() => setActiveSection(s.key)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all shrink-0 md:w-full" style={{
                             background: activeSection === s.key ? "linear-gradient(135deg, rgba(216,128,48,0.15), rgba(216,128,48,0.05))" : "transparent",
                             color: activeSection === s.key ? "var(--color-brand-400)" : "var(--color-surface-400)",
                             borderInlineStart: activeSection === s.key ? "3px solid var(--color-brand-500)" : "3px solid transparent",

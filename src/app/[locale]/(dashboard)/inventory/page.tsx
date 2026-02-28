@@ -164,7 +164,8 @@ export default function InventoryPage() {
                 </div>
             ) : (
                 <div className="card overflow-hidden" style={{ padding: 0 }}>
-                    <div className="overflow-x-auto">
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead>
                                 <tr style={{ background: "var(--color-surface-800)", borderBottom: "1px solid var(--color-surface-700)" }}>
@@ -209,6 +210,43 @@ export default function InventoryPage() {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="md:hidden flex flex-col divide-y" style={{ borderColor: "var(--color-surface-800)" }}>
+                        {filtered.map((item: any) => (
+                            <div key={item.id} className="p-4 flex flex-col gap-3 cursor-pointer hover:bg-white/[0.02]" onClick={() => openEdit(item)}>
+                                <div className="flex justify-between items-start">
+                                    <div className="flex flex-col">
+                                        <h3 className="font-semibold text-white leading-tight mb-1">{locale === "ar" ? item.name_ar : item.name}</h3>
+                                        <span className="font-mono text-[10px]" style={{ color: "var(--color-surface-400)" }}>{item.sku}</span>
+                                    </div>
+                                    <span className={`badge ${STATUS_BADGE[item.status] || "badge-neutral"} shrink-0`}>{t(item.status)}</span>
+                                </div>
+                                <div className="flex justify-between items-end">
+                                    <div className="flex flex-col gap-1.5">
+                                        <div className="flex flex-wrap gap-2">
+                                            <span className="text-[10px] px-2 py-0.5 rounded-full" style={{
+                                                background: item.item_type === "both" ? "rgba(168,85,247,0.15)" : item.item_type === "sale" ? "rgba(16,185,129,0.15)" : "rgba(59,130,246,0.15)",
+                                                color: item.item_type === "both" ? "#c084fc" : item.item_type === "sale" ? "#34d399" : "#60a5fa",
+                                            }}>{typeLabel(item.item_type)}</span>
+                                            <span className="text-xs" style={{ color: "var(--color-surface-400)" }}>
+                                                {locale === "ar" ? item.categories?.name_ar : item.categories?.name}
+                                            </span>
+                                        </div>
+                                        <span className="text-xs" style={{ color: "var(--color-surface-400)" }}>{t("quantity")}: <span className="text-white font-medium">{item.quantity}</span></span>
+                                    </div>
+                                    <div className="font-bold text-sm whitespace-nowrap text-end" style={{ color: "var(--color-brand-400)" }}>
+                                        {formatCurrency(item.sale_price)}
+                                        {item.rental_price_daily > 0 && (
+                                            <div className="text-[10px] font-normal" style={{ color: "var(--color-surface-400)" }}>
+                                                {formatCurrency(item.rental_price_daily)}/{locale === "ar" ? "يوم" : "day"}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             )}
