@@ -184,11 +184,30 @@ export default function RentalsPage() {
                                 {notes.remarks && <p className="text-xs p-2 rounded-lg mb-3" style={{ background: "var(--color-surface-800)", color: "var(--color-surface-300)" }}>📝 {notes.remarks}</p>}
 
                                 {/* Actions */}
-                                {(status === "active" || status === "overdue") && !isEditing && (
-                                    <button onClick={() => handleReturn(rental.id)} className="btn btn-primary btn-sm w-full" disabled={updateRental.isPending}>
-                                        {updateRental.isPending ? <Loader2 size={14} className="animate-spin" /> : null} {t("returnItem")}
-                                    </button>
-                                )}
+                                <div className="flex flex-col gap-2">
+                                    {(status === "active" || status === "overdue") && !isEditing && (
+                                        <button onClick={() => handleReturn(rental.id)} className="btn btn-primary btn-sm w-full" disabled={updateRental.isPending}>
+                                            {updateRental.isPending ? <Loader2 size={14} className="animate-spin" /> : null} {t("returnItem")}
+                                        </button>
+                                    )}
+                                    {/* Send WhatsApp Invoice */}
+                                    {(notes.customer_phone || customer?.phone) && !isEditing && (
+                                        <a
+                                            href={`https://wa.me/${(notes.customer_phone || customer?.phone).replace(/\D/g, '')}?text=${encodeURIComponent(
+                                                locale === "ar"
+                                                    ? `البارحي - فاتورة إيجار\n----------------------------------\nمرحباً ${notes.customer_name || customer?.full_name || 'عميلنا العزيز'}، شكرًا لتسوقك من\nالبارحي!\n\nالنوع: إيجار 📌\nالتاريخ: ${formatDate(rental.start_date)} 📅\nالعميل: ${notes.customer_name || customer?.full_name || '—'} 👤\nالهاتف: ${notes.customer_phone || customer?.phone || '—'} 📞\n\nالقطعة المستأجرة: 📦\n🧥 ${item?.name_ar || item?.name} × 1 = ${rental.rental_fee} ر.ع\n\nتاريخ الإرجاع المحدد: ${formatDate(rental.due_date)} ⏰\n\nالمجموع الفرعي: ${rental.rental_fee} ر.ع 💰\nالخصم: 0 ر.ع 🏷️\nالإجمالي: ${rental.rental_fee} ر.ع ✅\n\n----------------------------------\n⚠️ تنبيه تأخير الإرجاع:\nفي حال التأخر عن موعد الإرجاع، سيتم احتساب غرامة يومية تعادل قيمة إيجار القطعة لكل يوم تأخير إضافي.\n\n----------------------------------\nشكراً لاختياركم البارحي! 🙏\n\nنسعد بخدمتكم دائماً`
+                                                    : `Al Barhi - Rental Invoice\n----------------------------------\nWelcome ${notes.customer_name || customer?.full_name || 'Valued Customer'}, thank you for shopping at\nAl Barhi!\n\nType: Rental 📌\nDate: ${formatDate(rental.start_date)} 📅\nCustomer: ${notes.customer_name || customer?.full_name || '—'} 👤\nPhone: ${notes.customer_phone || customer?.phone || '—'} 📞\n\nRented Item: 📦\n🧥 ${item?.name || item?.name_ar} × 1 = ${rental.rental_fee} OMR\n\nDue Date: ${formatDate(rental.due_date)} ⏰\n\nSubtotal: ${rental.rental_fee} OMR 💰\nDiscount: 0 OMR 🏷️\nTotal: ${rental.rental_fee} OMR ✅\n\n----------------------------------\n⚠️ Overdue Notice:\nIf the item is not returned by the due date, a daily penalty equal to the item's rental price will be charged for each additional day.\n\n----------------------------------\nThank you for choosing Al Barhi! 🙏\n\nAlways happy to serve you`
+                                            )}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center justify-center gap-2 w-full py-2 rounded-lg text-sm font-medium transition-all hover:bg-opacity-90 mt-1"
+                                            style={{ background: "rgba(37, 211, 102, 0.15)", color: "#25D366", border: "1px solid rgba(37, 211, 102, 0.2)" }}
+                                        >
+                                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
+                                            {locale === "ar" ? "إرسال الفاتورة عبر واتساب" : "Send WhatsApp Invoice"}
+                                        </a>
+                                    )}
+                                </div>
 
                                 {/* Inline Edit */}
                                 {isEditing && (
