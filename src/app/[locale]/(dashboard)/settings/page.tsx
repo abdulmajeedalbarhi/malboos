@@ -196,17 +196,24 @@ export default function SettingsPage() {
             </div>
 
             <div className="flex flex-col md:flex-row gap-6">
-                {/* Sidebar */}
-                <div className="w-full md:w-56 shrink-0 flex md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
-                    {sections.map(s => (
-                        <button key={s.key} onClick={() => setActiveSection(s.key)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all shrink-0 md:w-full" style={{
-                            background: activeSection === s.key ? "linear-gradient(135deg, rgba(216,128,48,0.15), rgba(216,128,48,0.05))" : "transparent",
-                            color: activeSection === s.key ? "var(--color-brand-400)" : "var(--color-surface-400)",
-                            borderInlineStart: activeSection === s.key ? "3px solid var(--color-brand-500)" : "3px solid transparent",
-                        }}>
-                            <s.icon size={18} /> {s.label}
-                        </button>
-                    ))}
+                {/* Sidebar / Tabs */}
+                <div className="w-full md:w-60 shrink-0">
+                    <div className="flex md:flex-col gap-1 p-1 md:p-0 rounded-2xl md:rounded-none bg-[var(--color-surface-900)] md:bg-transparent overflow-x-auto hide-scrollbar">
+                        {sections.map(s => {
+                            const isActive = activeSection === s.key;
+                            return (
+                                <button key={s.key} onClick={() => setActiveSection(s.key)} className="flex items-center justify-center md:justify-start gap-2 px-4 py-2.5 md:py-3 rounded-xl text-xs md:text-sm font-medium transition-all shrink-0 md:w-full border-none" style={{
+                                    background: isActive ? (locale === "ar" ? "linear-gradient(135deg, var(--color-brand-600), var(--color-brand-500))" : "linear-gradient(135deg, var(--color-brand-500), var(--color-brand-600))") : "transparent",
+                                    color: isActive ? "white" : "var(--color-surface-400)",
+                                    boxShadow: isActive ? "0 4px 12px rgba(216,128,48,0.2)" : "none",
+                                    borderInlineStart: isActive ? "none" : "none", // Resetting for simplicity
+                                }}>
+                                    <s.icon size={16} className={isActive ? "text-white" : "text-current"} />
+                                    <span className="whitespace-nowrap">{s.label}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
 
                 {/* Content */}
@@ -214,13 +221,13 @@ export default function SettingsPage() {
                     {/* ====== Users Section ====== */}
                     {activeSection === "users" && (
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                                     <Shield size={20} style={{ color: "var(--color-brand-400)" }} />
                                     {locale === "ar" ? "المستخدمون والصلاحيات" : "Users & Permissions"}
                                 </h2>
                                 {profile?.role === "admin" && (
-                                    <button className="btn btn-primary" onClick={() => setShowAddUser(true)}>
+                                    <button className="btn btn-primary w-full sm:w-auto" onClick={() => setShowAddUser(true)}>
                                         <UserPlus size={16} /> {locale === "ar" ? "إضافة مستخدم" : "Add User"}
                                     </button>
                                 )}
@@ -241,22 +248,22 @@ export default function SettingsPage() {
                                         const isCurrentUser = user.auth_user_id === profile?.auth_user_id;
 
                                         return (
-                                            <div key={user.id} className="card" style={{ padding: "1rem" }}>
+                                            <div key={user.id} className="card p-3 sm:p-4">
                                                 {!isEditing ? (
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: "linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700))", color: "white" }}>
+                                                    <div className="flex items-center justify-between gap-2">
+                                                        <div className="flex items-center gap-3 overflow-hidden">
+                                                            <div className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-full flex items-center justify-center text-sm font-bold shadow-inner" style={{ background: "linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700))", color: "white" }}>
                                                                 {user.full_name?.charAt(0) || "?"}
                                                             </div>
-                                                            <div>
+                                                            <div className="overflow-hidden">
                                                                 <div className="flex items-center gap-2">
-                                                                    <p className="text-sm font-semibold text-white">{user.full_name}</p>
-                                                                    {isCurrentUser && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(216,128,48,0.15)", color: "var(--color-brand-400)" }}>{locale === "ar" ? "أنت" : "You"}</span>}
+                                                                    <p className="text-sm font-semibold text-white truncate">{user.full_name}</p>
+                                                                    {isCurrentUser && <span className="text-[10px] px-1.5 py-0.5 rounded-full shrink-0" style={{ background: "rgba(216,128,48,0.15)", color: "var(--color-brand-400)" }}>{locale === "ar" ? "أنت" : "You"}</span>}
                                                                 </div>
-                                                                <div className="flex items-center gap-2 mt-0.5">
-                                                                    <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: rc.bg, color: rc.color }}>{roleLabel(user.role)}</span>
-                                                                    {user.branches && <span className="text-xs" style={{ color: "var(--color-surface-500)" }}>{locale === "ar" ? user.branches?.name_ar : user.branches?.name}</span>}
-                                                                    {user.phone && <span className="text-xs" style={{ color: "var(--color-surface-500)" }}>• {user.phone}</span>}
+                                                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5">
+                                                                    <span className="text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full" style={{ background: rc.bg, color: rc.color }}>{roleLabel(user.role)}</span>
+                                                                    {user.branches && <span className="text-[10px] sm:text-xs truncate max-w-[80px] sm:max-w-none" style={{ color: "var(--color-surface-500)" }}>{locale === "ar" ? user.branches?.name_ar : user.branches?.name}</span>}
+                                                                    {user.phone && <span className="text-[10px] sm:text-xs shrink-0" style={{ color: "var(--color-surface-500)" }}>• {user.phone}</span>}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -309,8 +316,8 @@ export default function SettingsPage() {
                             {/* Add User Modal */}
                             {showAddUser && (
                                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)" }} onClick={() => setShowAddUser(false)}>
-                                    <div className="glass rounded-2xl p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto animate-fade-in" onClick={(e) => e.stopPropagation()}>
-                                        <div className="flex items-center justify-between mb-5">
+                                    <div className="glass rounded-2xl p-4 sm:p-6 w-full max-w-lg max-h-[90vh] sm:max-h-[85vh] overflow-y-auto animate-fade-in" onClick={(e) => e.stopPropagation()}>
+                                        <div className="flex items-center justify-between mb-4 sm:mb-5">
                                             <h2 className="text-lg font-bold text-white">{locale === "ar" ? "إضافة مستخدم جديد" : "Add New User"}</h2>
                                             <button onClick={() => setShowAddUser(false)}><X size={20} style={{ color: "var(--color-surface-400)" }} /></button>
                                         </div>
@@ -360,13 +367,13 @@ export default function SettingsPage() {
                     {/* ====== Shop Info ====== */}
                     {activeSection === "shop" && (
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                                     <Building2 size={20} style={{ color: "var(--color-brand-400)" }} />
                                     {locale === "ar" ? "معلومات المتجر والفروع" : "Shop & Branches"}
                                 </h2>
                                 {(profile?.role === "admin" || profile?.role === "owner") && (
-                                    <button className="btn btn-primary btn-sm" onClick={() => setShowAddBranch(true)}>
+                                    <button className="btn btn-primary w-full sm:w-auto btn-sm" onClick={() => setShowAddBranch(true)}>
                                         <Plus size={16} /> {locale === "ar" ? "إضافة فرع" : "Add Branch"}
                                     </button>
                                 )}
@@ -374,14 +381,22 @@ export default function SettingsPage() {
                             {branches && branches.length > 0 ? (
                                 <div className="space-y-3">
                                     {branches.map((branch: any) => (
-                                        <div key={branch.id} className="card" style={{ padding: "1.25rem" }}>
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <Building2 size={18} style={{ color: "var(--color-brand-400)" }} />
+                                        <div key={branch.id} className="card p-4 sm:p-5">
+                                            <div className="flex items-center gap-3 mb-3">
+                                                <div className="p-2 rounded-lg bg-[var(--color-surface-800)]">
+                                                    <Building2 size={18} style={{ color: "var(--color-brand-400)" }} />
+                                                </div>
                                                 <h3 className="text-base font-semibold text-white">{locale === "ar" ? branch.name_ar : branch.name}</h3>
                                             </div>
-                                            <div className="grid grid-cols-2 gap-3 text-sm">
-                                                <div><span style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "العنوان" : "Address"}: </span><span className="text-white">{branch.address || "—"}</span></div>
-                                                <div><span style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "الهاتف" : "Phone"}: </span><span className="text-white">{branch.phone || "—"}</span></div>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4 text-sm">
+                                                <div className="flex items-start gap-2">
+                                                    <span className="shrink-0 mt-0.5" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "العنوان" : "Address"}:</span>
+                                                    <span className="text-white line-clamp-1">{branch.address || "—"}</span>
+                                                </div>
+                                                <div className="flex items-start gap-2">
+                                                    <span className="shrink-0 mt-0.5" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "الهاتف" : "Phone"}:</span>
+                                                    <span className="text-white">{branch.phone || "—"}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
@@ -393,8 +408,8 @@ export default function SettingsPage() {
                             {/* Add Branch Modal */}
                             {showAddBranch && (
                                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)" }} onClick={() => setShowAddBranch(false)}>
-                                    <div className="glass rounded-2xl p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto animate-fade-in" onClick={(e) => e.stopPropagation()}>
-                                        <div className="flex items-center justify-between mb-5">
+                                    <div className="glass rounded-2xl p-4 sm:p-6 w-full max-w-lg max-h-[90vh] sm:max-h-[85vh] overflow-y-auto animate-fade-in" onClick={(e) => e.stopPropagation()}>
+                                        <div className="flex items-center justify-between mb-4 sm:mb-5">
                                             <h2 className="text-lg font-bold text-white">{locale === "ar" ? "إضافة فرع جديد" : "Add New Branch"}</h2>
                                             <button onClick={() => setShowAddBranch(false)}><X size={20} style={{ color: "var(--color-surface-400)" }} /></button>
                                         </div>
@@ -432,29 +447,38 @@ export default function SettingsPage() {
                                 <Globe size={20} style={{ color: "var(--color-brand-400)" }} />
                                 {locale === "ar" ? "التفضيلات" : "Preferences"}
                             </h2>
-                            <div className="card" style={{ padding: "1.25rem" }}>
-                                <div className="flex items-center justify-between mb-4">
+                            <div className="card p-4 sm:p-5">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 pb-5 border-b border-[var(--color-surface-800)]">
                                     <div>
-                                        <p className="text-sm font-medium text-white">{locale === "ar" ? "اللغة" : "Language"}</p>
-                                        <p className="text-xs" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "تبديل لغة النظام" : "Switch system language"}</p>
+                                        <p className="text-sm font-semibold text-white">{locale === "ar" ? "اللغة" : "Language"}</p>
+                                        <p className="text-xs mt-0.5" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "تبديل لغة النظام" : "Switch system language"}</p>
                                     </div>
                                     <div className="flex gap-2">
-                                        <a href="/ar/settings" className="px-4 py-2 rounded-lg text-sm font-medium transition-all" style={{
+                                        <a href="/ar/settings" className="flex-1 sm:flex-none text-center px-4 py-2 rounded-xl text-xs font-medium transition-all" style={{
                                             background: locale === "ar" ? "linear-gradient(135deg, var(--color-brand-500), var(--color-brand-600))" : "var(--color-surface-800)",
                                             color: locale === "ar" ? "white" : "var(--color-surface-400)", textDecoration: "none",
-                                        }}>العربية</a>
-                                        <a href="/en/settings" className="px-4 py-2 rounded-lg text-sm font-medium transition-all" style={{
+                                            boxShadow: locale === "ar" ? "0 4px 10px rgba(216,128,48,0.2)" : "none",
+                                        }}>{locale === "ar" ? "العربية" : "Arabic"}</a>
+                                        <a href="/en/settings" className="flex-1 sm:flex-none text-center px-4 py-2 rounded-xl text-xs font-medium transition-all" style={{
                                             background: locale === "en" ? "linear-gradient(135deg, var(--color-brand-500), var(--color-brand-600))" : "var(--color-surface-800)",
                                             color: locale === "en" ? "white" : "var(--color-surface-400)", textDecoration: "none",
+                                            boxShadow: locale === "en" ? "0 4px 10px rgba(216,128,48,0.2)" : "none",
                                         }}>English</a>
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-sm font-medium text-white">{locale === "ar" ? "العملة" : "Currency"}</p>
-                                        <p className="text-xs" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "الريال العماني (ر.ع.)" : "Omani Rial (OMR)"}</p>
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-lg bg-[var(--color-surface-800)]">
+                                            <span className="text-sm font-bold active:text-[var(--color-brand-400)] transition-colors" style={{ color: "var(--color-brand-400)" }}>OMR</span>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-semibold text-white">{locale === "ar" ? "العملة" : "Currency"}</p>
+                                            <p className="text-xs mt-0.5" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "الريال العماني (ر.ع.)" : "Omani Rial (OMR)"}</p>
+                                        </div>
                                     </div>
-                                    <span className="text-sm font-bold" style={{ color: "var(--color-brand-400)" }}>OMR</span>
+                                    <div className="p-1 px-3 rounded-lg border border-[var(--color-surface-700)] bg-[var(--color-surface-900)]">
+                                        <span className="text-xs font-bold text-white">ر.ع.</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
