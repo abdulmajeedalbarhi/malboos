@@ -6,16 +6,18 @@ import { Link, useRouter } from "@/i18n/routing";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLayout } from "@/contexts/LayoutContext";
 import { useDashboardStats } from "@/hooks/useSupabase";
-import { Bell, Globe, Menu, X, AlertTriangle } from "lucide-react";
+import { Bell, Globe, Menu, X, AlertTriangle, Settings, LogOut } from "lucide-react";
 
 export default function Header() {
     const t = useTranslations();
     const locale = useLocale();
     const router = useRouter();
-    const { profile } = useAuth();
+    const { profile, signOut } = useAuth();
     const { isMobileMenuOpen, toggleMobileMenu } = useLayout();
     const [showNotifications, setShowNotifications] = useState(false);
+    const [showProfileDropdown, setShowProfileDropdown] = useState(false);
     const notifRef = useRef<HTMLDivElement>(null);
+    const profileRef = useRef<HTMLDivElement>(null);
 
     const otherLocale = locale === "ar" ? "en" : "ar";
     const roleName = profile?.role ? t(`roles.${profile.role}`) : "";
@@ -31,6 +33,9 @@ export default function Header() {
         const handleClickOutside = (event: MouseEvent) => {
             if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
                 setShowNotifications(false);
+            }
+            if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+                setShowProfileDropdown(false);
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
@@ -137,15 +142,48 @@ export default function Header() {
                     </span>
                 </Link>
 
-                {/* User Avatar */}
-                <div
-                    className="flex items-center justify-center w-9 h-9 rounded-full text-sm font-semibold ms-2"
-                    style={{
-                        background: "linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700))",
-                        color: "white",
-                    }}
-                >
-                    {profile?.full_name?.charAt(0)?.toUpperCase() ?? "U"}
+                {/* User Avatar Dropdown */}
+                <div ref={profileRef} className="relative">
+                    <button
+                        onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                        className="flex items-center justify-center w-9 h-9 rounded-full text-sm font-semibold ms-2 transition-transform hover:scale-105 active:scale-95"
+                        style={{
+                            background: "linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700))",
+                            color: "white",
+                        }}
+                    >
+                        {profile?.full_name?.charAt(0)?.toUpperCase() ?? "U"}
+                    </button>
+
+                    {showProfileDropdown && (
+                        <div className="absolute top-full mt-2 w-48 rounded-2xl p-2 shadow-xl z-50 animate-fade-in right-0" style={{
+                            background: "var(--color-surface-800)",
+                            border: "1px solid var(--color-surface-700)",
+                        }}>
+                            <div className="flex flex-col gap-1">
+                                <Link
+                                    href="/settings"
+                                    onClick={() => setShowProfileDropdown(false)}
+                                    className="flex items-center gap-3 p-2.5 rounded-xl transition-all hover:bg-white/5 text-start w-full text-white"
+                                    style={{ textDecoration: "none" }}
+                                >
+                                    <Settings size={16} style={{ color: "var(--color-brand-400)" }} />
+                                    <span className="text-sm font-medium">{locale === "ar" ? "الإعدادات" : "Settings"}</span>
+                                </Link>
+                                <button
+                                    onClick={() => {
+                                        setShowProfileDropdown(false);
+                                        signOut();
+                                    }}
+                                    className="flex items-center gap-3 p-2.5 rounded-xl transition-all hover:bg-danger/10 text-start w-full"
+                                    style={{ color: "var(--color-danger)" }}
+                                >
+                                    <LogOut size={16} />
+                                    <span className="text-sm font-medium">{locale === "ar" ? "خروج" : "Logout"}</span>
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </header>
