@@ -26,8 +26,21 @@ export default function LoginPage() {
         setError("");
         setIsLoading(true);
 
-        const isLegacyEmail = username.includes("@");
-        const authIdentifier = isLegacyEmail ? username.trim().toLowerCase() : `${username.trim().toLowerCase()}@malboos.local`;
+        const cleanUser = username.trim().toLowerCase();
+        let authIdentifier = cleanUser;
+
+        // 1. Direct Master Admin Override
+        if (cleanUser === "abdulmajeed") {
+            authIdentifier = "abdulmajeedalbarhi@gmail.com";
+        }
+        // 2. Legacy Email Fallback
+        else if (cleanUser.includes("@")) {
+            authIdentifier = cleanUser;
+        }
+        // 3. Standard Username mapping -> Synthetic Email
+        else {
+            authIdentifier = `${cleanUser}@malboos.local`;
+        }
 
         const { error: signInError } = await signIn(authIdentifier, password);
 
