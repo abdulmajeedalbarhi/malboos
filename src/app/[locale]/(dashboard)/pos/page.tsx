@@ -225,8 +225,12 @@ export default function POSPage() {
                     ? `البارحي - فاتورة\n----------------------------------\nمرحباً ${customerName || 'عميلنا العزيز'}، شكرًا لتسوقك من\nالبارحي!\n\nالنوع: ${mode === 'sale' ? 'بيع' : 'إيجار'} 📌\nالتاريخ: ${new Intl.DateTimeFormat('en-OM', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date())} 📅\nالعميل: ${customerName || '—'} 👤\nالهاتف: ${customerPhone || '—'} 📞\n\nالمنتجات: 📦\n${cart.map((i: any, idx: number) => `${idx + 1}. 🧥 ${locale === 'ar' ? i.name_ar : i.name} × ${i.quantity} = ${i.price * i.quantity} ر.ع`).join('\n')}\n\nالمجموع الفرعي: ${baseTotal} ر.ع 💰\nالخصم: -${discount} ر.ع 🏷️\nالإجمالي: ${total} ر.ع ✅\n\n----------------------------------\n${mode === 'rental' ? '⚠️ تنبيه تأخير الإرجاع:\nفي حال التأخر عن موعد الإرجاع، سيتم احتساب غرامة يومية تعادل قيمة إيجار القطعة لكل يوم تأخير إضافي.\n\n----------------------------------\n' : ''}شكراً لاختياركم البارحي! 🙏\n\nنسعد بخدمتكم دائماً`
                     : `Al Barhi - Invoice\n----------------------------------\nWelcome ${customerName || 'Valued Customer'}, thank you for shopping at\nAl Barhi!\n\nType: ${mode === 'sale' ? 'Sale' : 'Rental'} 📌\nDate: ${new Intl.DateTimeFormat('en-OM', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date())} 📅\nCustomer: ${customerName || '—'} 👤\nPhone: ${customerPhone || '—'} 📞\n\nItems: 📦\n${cart.map((i: any, idx: number) => `${idx + 1}. 🧥 ${locale === 'ar' ? i.name_ar : i.name} × ${i.quantity} = ${i.price * i.quantity} OMR`).join('\n')}\n\nSubtotal: ${baseTotal} OMR 💰\nDiscount: -${discount} OMR 🏷️\nTotal: ${total} OMR ✅\n\n----------------------------------\n${mode === 'rental' ? '⚠️ Overdue Notice:\nIf the item is not returned by the due date, a daily penalty equal to the item\'s rental price will be charged for each additional day.\n\n----------------------------------\n' : ''}Thank you for choosing Al Barhi! 🙏\n\nAlways happy to serve you`;
 
-                const wpUrl = `https://wa.me/${customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(wpText)}`;
-                window.open(wpUrl, '_blank');
+                // Fire and forget backend WhatsApp dispatch
+                fetch('/api/whatsapp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: customerPhone, message: wpText })
+                }).catch(err => console.error("Auto WhatsApp Error:", err));
             }
 
             // Reset form
