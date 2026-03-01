@@ -39,7 +39,7 @@ export default function LoginPage() {
         }
         // 3. Standard Username mapping -> Synthetic Email
         else {
-            authIdentifier = `${cleanUser}@malboos.local`;
+            authIdentifier = `${cleanUser}@malboos.com`;
         }
 
         const { error: signInError } = await signIn(authIdentifier, password);

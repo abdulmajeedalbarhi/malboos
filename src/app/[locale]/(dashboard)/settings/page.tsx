@@ -67,7 +67,7 @@ export default function SettingsPage() {
             );
 
             // 2. Sign up the user in Supabase Auth
-            const syntheticEmail = `${newUser.username.trim().toLowerCase()}@malboos.local`;
+            const syntheticEmail = `${newUser.username.trim().toLowerCase()}@malboos.com`;
             const { data: authData, error: authError } = await tempClient.auth.signUp({
                 email: syntheticEmail,
                 password: newUser.password,
@@ -138,7 +138,8 @@ export default function SettingsPage() {
         e.preventDefault();
         setSaving(true);
         try {
-            const { error } = await supabase.from("branches").insert(newBranch);
+            const branchPayload = { ...newBranch, shop_id: profile?.shop_id };
+            const { error } = await supabase.from("branches").insert(branchPayload);
             if (error) throw error;
             setShowAddBranch(false);
             setNewBranch({ name: "", name_ar: "", phone: "", address: "" });
