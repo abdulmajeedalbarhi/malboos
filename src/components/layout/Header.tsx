@@ -74,8 +74,7 @@ export default function Header() {
                     <select
                         value={activeBranchId || "all"}
                         onChange={(e) => setActiveBranchId(e.target.value === "all" ? null : e.target.value)}
-                        className="me-1 hidden sm:block px-2 py-1.5 text-xs font-medium rounded-lg bg-[var(--color-surface-800)] text-white border border-[var(--color-surface-700)] focus:outline-none focus:border-[var(--color-brand-400)] transition-colors cursor-pointer"
-                        style={{ maxWidth: "160px" }}
+                        className="me-1 px-2 py-1.5 text-xs font-medium rounded-lg bg-[var(--color-surface-800)] text-white border border-[var(--color-surface-700)] focus:outline-none focus:border-[var(--color-brand-400)] transition-colors cursor-pointer max-w-[120px] sm:max-w-[160px]"
                     >
                         <option value="all">{locale === "ar" ? "جميع الفروع" : "All Branches"}</option>
                         {branches.map(b => (
