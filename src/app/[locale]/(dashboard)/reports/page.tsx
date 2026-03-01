@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useLocale } from "next-intl";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLayout } from "@/contexts/LayoutContext";
 import { useDashboardStats, useTransactions, useRentals } from "@/hooks/useSupabase";
 import {
     BarChart3, TrendingUp, Package, CalendarClock, DollarSign,
@@ -12,7 +13,10 @@ import {
 export default function ReportsPage() {
     const locale = useLocale();
     const { profile } = useAuth();
-    const branchId = profile?.branch_id ?? undefined;
+    const { activeBranchId } = useLayout();
+
+    const isMultiTenant = profile?.role === "admin" || profile?.role === "owner";
+    const branchId = isMultiTenant ? (activeBranchId || undefined) : (profile?.branch_id ?? undefined);
 
     const { data: stats, isLoading: statsLoading } = useDashboardStats(branchId);
     const { data: transactions } = useTransactions(branchId);

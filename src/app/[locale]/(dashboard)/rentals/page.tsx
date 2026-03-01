@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLayout } from "@/contexts/LayoutContext";
 import { useRentals, useUpdateRental } from "@/hooks/useSupabase";
 import {
     CalendarClock, Clock, AlertTriangle, CheckCircle, XCircle, Phone, Loader2,
@@ -23,11 +24,15 @@ export default function RentalsPage() {
     const tc = useTranslations("common");
     const locale = useLocale();
     const { profile } = useAuth();
-    const [statusFilter, setStatusFilter] = useState("all");
+    const { activeBranchId } = useLayout();
+
+    const [statusFilter, setStatusFilter] = useState<string>("all");
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editForm, setEditForm] = useState<any>({});
 
-    const branchId = profile?.role === "admin" || profile?.role === "owner" ? undefined : profile?.branch_id ?? undefined;
+    // Multi-tenant filtering
+    const isMultiTenant = profile?.role === "admin" || profile?.role === "owner";
+    const branchId = isMultiTenant ? (activeBranchId || undefined) : (profile?.branch_id ?? undefined);
     const { data: rentals, isLoading } = useRentals(branchId, statusFilter);
     const updateRental = useUpdateRental();
 

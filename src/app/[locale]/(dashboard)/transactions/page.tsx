@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLayout } from "@/contexts/LayoutContext";
 import { useTransactions, useDeleteTransaction, useUpdateTransaction } from "@/hooks/useSupabase";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -17,8 +18,11 @@ export default function TransactionsPage() {
     const tc = useTranslations("common");
     const locale = useLocale();
     const { profile } = useAuth();
+    const { activeBranchId } = useLayout();
 
-    const branchId = profile?.role === "admin" || profile?.role === "owner" ? undefined : profile?.branch_id ?? undefined;
+    // Multi-tenant selection
+    const isMultiTenant = profile?.role === "admin" || profile?.role === "owner";
+    const branchId = isMultiTenant ? (activeBranchId || undefined) : (profile?.branch_id ?? undefined);
     const { data: transactions, isLoading, refetch } = useTransactions(branchId);
     const deleteTransaction = useDeleteTransaction();
     const updateTransaction = useUpdateTransaction();

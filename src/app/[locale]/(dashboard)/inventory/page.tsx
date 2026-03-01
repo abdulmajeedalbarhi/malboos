@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLayout } from "@/contexts/LayoutContext";
 import { useInventory, useCategories, useAddInventoryItem, useUpdateInventoryItem, useDeleteInventoryItem } from "@/hooks/useSupabase";
 import { Package, Plus, Search, Loader2, Trash2, X, Pencil } from "lucide-react";
 
@@ -21,8 +22,11 @@ export default function InventoryPage() {
     const tc = useTranslations("common");
     const locale = useLocale();
     const { profile } = useAuth();
+    const { activeBranchId } = useLayout();
 
-    const branchId = profile?.branch_id ?? undefined;
+    // Multi-tenant selection
+    const isMultiTenant = profile?.role === "admin" || profile?.role === "owner";
+    const branchId = isMultiTenant ? (activeBranchId || undefined) : (profile?.branch_id ?? undefined);
     const { data: items, isLoading } = useInventory(branchId);
     const { data: categories } = useCategories();
     const addItem = useAddInventoryItem();

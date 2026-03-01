@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/routing";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLayout } from "@/contexts/LayoutContext";
-import { useDashboardStats } from "@/hooks/useSupabase";
+import { useDashboardStats, useBranches } from "@/hooks/useSupabase";
 import { Bell, Globe, Menu, X, AlertTriangle, Settings, LogOut } from "lucide-react";
 
 export default function Header() {
@@ -13,7 +13,7 @@ export default function Header() {
     const locale = useLocale();
     const router = useRouter();
     const { profile, signOut } = useAuth();
-    const { isMobileMenuOpen, toggleMobileMenu } = useLayout();
+    const { isMobileMenuOpen, toggleMobileMenu, activeBranchId, setActiveBranchId } = useLayout();
     const [showNotifications, setShowNotifications] = useState(false);
     const [showProfileDropdown, setShowProfileDropdown] = useState(false);
     const notifRef = useRef<HTMLDivElement>(null);
@@ -21,9 +21,11 @@ export default function Header() {
 
     const otherLocale = locale === "ar" ? "en" : "ar";
     const roleName = profile?.role ? t(`roles.${profile.role}`) : "";
-    const branchId = profile?.role === "admin" || profile?.role === "owner" ? undefined : profile?.branch_id ?? undefined;
+    const isMultiTenant = profile?.role === "admin" || profile?.role === "owner";
+    const branchId = isMultiTenant ? (activeBranchId || undefined) : (profile?.branch_id ?? undefined);
 
     const { data: stats } = useDashboardStats(branchId);
+    const { data: branches } = useBranches();
 
     const overdueCount = stats?.overdueRentals || 0;
     const hasNotifications = overdueCount > 0;
@@ -66,6 +68,24 @@ export default function Header() {
 
             {/* Right side - Actions */}
             <div className="flex items-center gap-1 sm:gap-2 relative">
+
+                {/* Branch Context Selector (Admin & Owner ONLY) */}
+                {isMultiTenant && branches && branches.length > 0 && (
+                    <select
+                        value={activeBranchId || "all"}
+                        onChange={(e) => setActiveBranchId(e.target.value === "all" ? null : e.target.value)}
+                        className="me-1 hidden sm:block px-2 py-1.5 text-xs font-medium rounded-lg bg-[var(--color-surface-800)] text-white border border-[var(--color-surface-700)] focus:outline-none focus:border-[var(--color-brand-400)] transition-colors cursor-pointer"
+                        style={{ maxWidth: "160px" }}
+                    >
+                        <option value="all">{locale === "ar" ? "جميع الفروع" : "All Branches"}</option>
+                        {branches.map(b => (
+                            <option key={b.id} value={b.id}>
+                                {locale === "ar" ? b.name_ar : b.name}
+                            </option>
+                        ))}
+                    </select>
+                )}
+
                 {/* Notifications */}
                 <div ref={notifRef} className="relative">
                     <button

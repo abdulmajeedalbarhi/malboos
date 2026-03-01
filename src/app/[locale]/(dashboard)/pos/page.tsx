@@ -3,10 +3,12 @@
 import React, { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLayout } from "@/contexts/LayoutContext";
 import { useInventory, useCreateTransaction, useCreateRental } from "@/hooks/useSupabase";
 import {
     ShoppingCart, Search, Plus, Minus, Trash2, CreditCard, Banknote,
     ArrowRightLeft, CalendarClock, Loader2, CheckCircle, X, Tag,
+    CheckCircle2, TicketPercent, User, AlertCircle
 } from "lucide-react";
 
 interface CartItem {
@@ -24,8 +26,11 @@ export default function POSPage() {
     const tc = useTranslations("common");
     const locale = useLocale();
     const { profile } = useAuth();
+    const { activeBranchId } = useLayout();
 
-    const branchId = profile?.branch_id ?? undefined;
+    const isMultiTenant = profile?.role === "admin" || profile?.role === "owner";
+    const branchId = isMultiTenant ? (activeBranchId || undefined) : (profile?.branch_id ?? undefined);
+
     const { data: inventory, isLoading } = useInventory(branchId);
     const createTransaction = useCreateTransaction();
     const createRental = useCreateRental();
@@ -142,7 +147,7 @@ export default function POSPage() {
                         discount: discount,
                         final_amount: total,
                         payment_method: paymentMethod,
-                        notes: customerName ? `${customerName} - ${customerPhone}` : null,
+                        notes: customerName ? `${customerName} - ${customerPhone} ` : null,
                         is_locked: false,
                     },
                     items: cart.map((c) => ({
@@ -191,7 +196,7 @@ export default function POSPage() {
                         discount: discount,
                         final_amount: total,
                         payment_method: paymentMethod,
-                        notes: `Rental - ${customerName ? customerName : ''}`,
+                        notes: `Rental - ${customerName ? customerName : ''} `,
                         is_locked: false,
                     },
                     items: cart.map((c) => ({
@@ -232,12 +237,32 @@ export default function POSPage() {
                 setShowSuccess(false);
                 setLastCheckout(null);
             }, 8000);
-        } catch (err) {
-            console.error("Checkout failed:", err);
+        } catch (err: any) {
+            console.error(err);
+            alert(locale === "ar" ? "خطأ: " + err.message : "Error: " + err.message);
         }
     };
 
     const isProcessing = createTransaction.isPending || createRental.isPending;
+
+    // Block UI if multi-tenant hasn't picked a branch
+    if (isMultiTenant && !activeBranchId) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh] text-center p-6 animate-fade-in">
+                <div className="card p-8 max-w-sm w-full mx-auto" style={{ border: "1px solid rgba(216, 128, 48, 0.2)" }}>
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: "rgba(216, 128, 48, 0.1)" }}>
+                        <AlertCircle size={32} style={{ color: "var(--color-brand-400)" }} />
+                    </div>
+                    <h2 className="text-lg font-bold text-white mb-2">{locale === "ar" ? "اختر فرعاً للمتابعة" : "Select a Branch"}</h2>
+                    <p className="text-sm leading-relaxed" style={{ color: "var(--color-surface-400)" }}>
+                        {locale === "ar"
+                            ? "لا يمكنك إجراء معاملات مبيعات أو إيجار دون تحديد فرع محدد من القائمة العلوية."
+                            : "You cannot process sales or rentals without selecting a specific branch from the header menu."}
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col lg:flex-row gap-6 animate-fade-in" style={{ minHeight: "calc(100vh - var(--header-height) - 3rem)" }}>

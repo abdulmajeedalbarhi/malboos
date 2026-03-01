@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLayout } from "@/contexts/LayoutContext";
 import { useFinancialPeriods, useCreateFinancialPeriod, useUpdateFinancialPeriod } from "@/hooks/useSupabase";
 import {
     Landmark, Calendar, CheckCircle, Clock, Lock, Unlock, Send, Loader2, Plus, X,
@@ -21,10 +22,13 @@ export default function FinancialPage() {
     const tc = useTranslations("common");
     const locale = useLocale();
     const { profile } = useAuth();
-    const [periodType, setPeriodType] = useState<"weekly" | "monthly">("weekly");
+    const { activeBranchId } = useLayout();
+
+    const [periodType, setPeriodType] = useState<"daily" | "weekly" | "monthly">("daily");
     const [showCreateModal, setShowCreateModal] = useState(false);
 
-    const branchId = profile?.role === "admin" || profile?.role === "owner" ? undefined : profile?.branch_id ?? undefined;
+    const isMultiTenant = profile?.role === "admin" || profile?.role === "owner";
+    const branchId = isMultiTenant ? (activeBranchId || undefined) : (profile?.branch_id ?? undefined);
     const { data: periods, isLoading } = useFinancialPeriods(branchId, periodType);
     const createPeriod = useCreateFinancialPeriod();
     const updatePeriod = useUpdateFinancialPeriod();
