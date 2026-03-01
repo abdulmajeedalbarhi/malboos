@@ -33,10 +33,14 @@ export default function SettingsPage() {
     const [loadingUsers, setLoadingUsers] = useState(true);
     const [showAddUser, setShowAddUser] = useState(false);
     const [editingUserId, setEditingUserId] = useState<string | null>(null);
-    const [newUser, setNewUser] = useState({ full_name: "", email: "", password: "", phone: "", role: "cashier", branch_id: "" });
+    const [newUser, setNewUser] = useState({ full_name: "", username: "", password: "", phone: "", role: "cashier", branch_id: "" });
     const [editUser, setEditUser] = useState<any>({});
     const [saving, setSaving] = useState(false);
     const [successMsg, setSuccessMsg] = useState("");
+
+    // Branches state
+    const [showAddBranch, setShowAddBranch] = useState(false);
+    const [newBranch, setNewBranch] = useState({ name: "", name_ar: "", phone: "", address: "" });
 
     // Fetch user profiles
     const fetchUsers = async () => {
@@ -63,8 +67,9 @@ export default function SettingsPage() {
             );
 
             // 2. Sign up the user in Supabase Auth
+            const syntheticEmail = `${newUser.username.trim().toLowerCase()}@malboos.local`;
             const { data: authData, error: authError } = await tempClient.auth.signUp({
-                email: newUser.email,
+                email: syntheticEmail,
                 password: newUser.password,
             });
 
@@ -97,7 +102,7 @@ export default function SettingsPage() {
             }
 
             setShowAddUser(false);
-            setNewUser({ full_name: "", email: "", password: "", phone: "", role: "cashier", branch_id: "" });
+            setNewUser({ full_name: "", username: "", password: "", phone: "", role: "cashier", branch_id: "" });
             showSuccess(locale === "ar" ? "تم إضافة المستخدم بنجاح" : "User added successfully");
             fetchUsers();
         } catch (err: any) {
@@ -127,6 +132,23 @@ export default function SettingsPage() {
         await supabase.from("user_profiles").delete().eq("id", id);
         showSuccess(locale === "ar" ? "تم حذف المستخدم" : "User deleted");
         fetchUsers();
+    };
+
+    const handleAddBranch = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSaving(true);
+        try {
+            const { error } = await supabase.from("branches").insert(newBranch);
+            if (error) throw error;
+            setShowAddBranch(false);
+            setNewBranch({ name: "", name_ar: "", phone: "", address: "" });
+            showSuccess(locale === "ar" ? "تم إضافة الفرع بنجاح" : "Branch added successfully");
+            window.location.reload();
+        } catch (err: any) {
+            console.error(err);
+            alert(locale === "ar" ? "خطأ: " + err.message : "Error: " + err.message);
+        }
+        setSaving(false);
     };
 
     const openEdit = (user: any) => {
@@ -196,9 +218,11 @@ export default function SettingsPage() {
                                     <Shield size={20} style={{ color: "var(--color-brand-400)" }} />
                                     {locale === "ar" ? "المستخدمون والصلاحيات" : "Users & Permissions"}
                                 </h2>
-                                <button className="btn btn-primary" onClick={() => setShowAddUser(true)}>
-                                    <UserPlus size={16} /> {locale === "ar" ? "إضافة مستخدم" : "Add User"}
-                                </button>
+                                {profile?.role === "admin" && (
+                                    <button className="btn btn-primary" onClick={() => setShowAddUser(true)}>
+                                        <UserPlus size={16} /> {locale === "ar" ? "إضافة مستخدم" : "Add User"}
+                                    </button>
+                                )}
                             </div>
 
                             {loadingUsers ? (
@@ -236,10 +260,12 @@ export default function SettingsPage() {
                                                             </div>
                                                         </div>
                                                         <div className="flex gap-1">
-                                                            <button onClick={() => openEdit(user)} className="p-1.5 rounded-lg" style={{ background: "var(--color-surface-700)" }}>
-                                                                <Pencil size={13} style={{ color: "var(--color-brand-400)" }} />
-                                                            </button>
-                                                            {!isCurrentUser && (
+                                                            {(profile?.role === "admin" || isCurrentUser) && (
+                                                                <button onClick={() => openEdit(user)} className="p-1.5 rounded-lg" style={{ background: "var(--color-surface-700)" }}>
+                                                                    <Pencil size={13} style={{ color: "var(--color-brand-400)" }} />
+                                                                </button>
+                                                            )}
+                                                            {profile?.role === "admin" && !isCurrentUser && (
                                                                 <button onClick={() => handleDeleteUser(user.id)} className="p-1.5 rounded-lg" style={{ background: "var(--color-surface-700)" }}>
                                                                     <Trash2 size={13} style={{ color: "#f87171" }} />
                                                                 </button>
@@ -295,8 +321,8 @@ export default function SettingsPage() {
                                                     <input className="input" dir="ltr" value={newUser.phone} onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })} /></div>
                                             </div>
                                             <div className="grid grid-cols-2 gap-3">
-                                                <div><label className="label">{locale === "ar" ? "البريد الإلكتروني" : "Email"}</label>
-                                                    <input type="email" dir="ltr" className="input" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} required /></div>
+                                                <div><label className="label">{locale === "ar" ? "اسم المستخدم" : "Username"}</label>
+                                                    <input type="text" dir="ltr" className="input" value={newUser.username} onChange={(e) => setNewUser({ ...newUser, username: e.target.value })} required /></div>
                                                 <div><label className="label">{locale === "ar" ? "كلمة المرور" : "Password"}</label>
                                                     <input type="password" dir="ltr" className="input" minLength={6} value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} required /></div>
                                             </div>
@@ -333,10 +359,17 @@ export default function SettingsPage() {
                     {/* ====== Shop Info ====== */}
                     {activeSection === "shop" && (
                         <div className="space-y-4">
-                            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                                <Building2 size={20} style={{ color: "var(--color-brand-400)" }} />
-                                {locale === "ar" ? "معلومات المتجر والفروع" : "Shop & Branches"}
-                            </h2>
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                                    <Building2 size={20} style={{ color: "var(--color-brand-400)" }} />
+                                    {locale === "ar" ? "معلومات المتجر والفروع" : "Shop & Branches"}
+                                </h2>
+                                {(profile?.role === "admin" || profile?.role === "owner") && (
+                                    <button className="btn btn-primary btn-sm" onClick={() => setShowAddBranch(true)}>
+                                        <Plus size={16} /> {locale === "ar" ? "إضافة فرع" : "Add Branch"}
+                                    </button>
+                                )}
+                            </div>
                             {branches && branches.length > 0 ? (
                                 <div className="space-y-3">
                                     {branches.map((branch: any) => (
@@ -354,6 +387,39 @@ export default function SettingsPage() {
                                 </div>
                             ) : (
                                 <div className="card text-center py-8"><p className="text-sm" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "لا توجد فروع" : "No branches"}</p></div>
+                            )}
+
+                            {/* Add Branch Modal */}
+                            {showAddBranch && (
+                                <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.6)" }} onClick={() => setShowAddBranch(false)}>
+                                    <div className="glass rounded-2xl p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto animate-fade-in" onClick={(e) => e.stopPropagation()}>
+                                        <div className="flex items-center justify-between mb-5">
+                                            <h2 className="text-lg font-bold text-white">{locale === "ar" ? "إضافة فرع جديد" : "Add New Branch"}</h2>
+                                            <button onClick={() => setShowAddBranch(false)}><X size={20} style={{ color: "var(--color-surface-400)" }} /></button>
+                                        </div>
+                                        <form onSubmit={handleAddBranch} className="space-y-4">
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div><label className="label">{locale === "ar" ? "اسم الفرع (إنجليزي)" : "Branch Name (En)"}</label>
+                                                    <input className="input" dir="ltr" value={newBranch.name} onChange={(e) => setNewBranch({ ...newBranch, name: e.target.value })} required /></div>
+                                                <div><label className="label">{locale === "ar" ? "اسم الفرع (عربي)" : "Branch Name (Ar)"}</label>
+                                                    <input className="input" dir="rtl" value={newBranch.name_ar} onChange={(e) => setNewBranch({ ...newBranch, name_ar: e.target.value })} required /></div>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div><label className="label">{locale === "ar" ? "الهاتف" : "Phone"}</label>
+                                                    <input className="input" dir="ltr" value={newBranch.phone} onChange={(e) => setNewBranch({ ...newBranch, phone: e.target.value })} required /></div>
+                                                <div><label className="label">{locale === "ar" ? "العنوان" : "Address"}</label>
+                                                    <input className="input" value={newBranch.address} onChange={(e) => setNewBranch({ ...newBranch, address: e.target.value })} required /></div>
+                                            </div>
+                                            <div className="flex gap-3 pt-2">
+                                                <button type="submit" className="btn btn-primary flex-1" disabled={saving}>
+                                                    {saving ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+                                                    {locale === "ar" ? "إضافة وحفظ" : "Add Branch"}
+                                                </button>
+                                                <button type="button" onClick={() => setShowAddBranch(false)} className="btn btn-secondary">{locale === "ar" ? "إلغاء" : "Cancel"}</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
                             )}
                         </div>
                     )}

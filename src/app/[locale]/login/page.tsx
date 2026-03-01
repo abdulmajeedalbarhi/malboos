@@ -13,7 +13,7 @@ export default function LoginPage() {
     const router = useRouter();
     const { signIn } = useAuth();
 
-    const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState("");
@@ -26,7 +26,8 @@ export default function LoginPage() {
         setError("");
         setIsLoading(true);
 
-        const { error: signInError } = await signIn(email, password);
+        const syntheticEmail = `${username.trim().toLowerCase()}@malboos.local`;
+        const { error: signInError } = await signIn(syntheticEmail, password);
 
         if (signInError) {
             setError(t("auth.loginError"));
@@ -102,18 +103,18 @@ export default function LoginPage() {
                     {/* Login Form */}
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div>
-                            <label htmlFor="email" className="label">
-                                {t("auth.email")}
+                            <label htmlFor="username" className="label">
+                                {locale === "ar" ? "اسم المستخدم" : "Username"}
                             </label>
                             <input
-                                id="email"
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                id="username"
+                                type="text"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
                                 className="input"
-                                placeholder="admin@malboos.om"
+                                placeholder="admin"
                                 required
-                                autoComplete="email"
+                                autoComplete="username"
                                 dir="ltr"
                             />
                         </div>
