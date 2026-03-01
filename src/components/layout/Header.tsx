@@ -47,14 +47,6 @@ export default function Header() {
         >
             {/* Left side - Page context */}
             <div className="flex items-center gap-3">
-                <button
-                    onClick={toggleMobileMenu}
-                    className="lg:hidden btn btn-ghost p-2 rounded-xl"
-                    aria-label="Toggle Menu"
-                >
-                    {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-                </button>
-
                 {profile && (
                     <div className="hidden sm:block">
                         <p className="text-sm font-medium text-white">

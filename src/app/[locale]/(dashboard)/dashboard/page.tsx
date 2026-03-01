@@ -38,14 +38,7 @@ export default function DashboardPage() {
     ];
 
     return (
-        <div className="space-y-6 animate-fade-in">
-            <div>
-                <h1 className="text-2xl font-bold text-white">{t("title")}</h1>
-                <p className="text-sm mt-1" style={{ color: "var(--color-surface-400)" }}>
-                    {locale === "ar" ? `مرحباً ${profile?.full_name || ""}` : `Welcome, ${profile?.full_name || ""}`}
-                </p>
-            </div>
-
+        <div className="space-y-6 animate-fade-in content-container">
             {/* Stat Cards — Clickable */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
                 {statCards.map((stat, i) => (

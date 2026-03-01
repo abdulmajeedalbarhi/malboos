@@ -13,7 +13,7 @@ export default function DashboardLayout({
             <Sidebar />
             <Header />
             <main
-                className="pt-[var(--header-height)] pb-[var(--bottom-nav-height, 65px)] lg:pb-0 transition-all duration-300 lg:ms-[var(--sidebar-width)] ms-0"
+                className="pt-[var(--header-height)] pb-24 lg:pb-0 transition-all duration-300 lg:ms-[var(--sidebar-width)] ms-0"
             >
                 <div className="p-4 lg:p-6">{children}</div>
             </main>
