@@ -32,6 +32,8 @@ export default function TransactionsPage() {
     const [editFinal, setEditFinal] = useState(0);
     const [editTotal, setEditTotal] = useState(0);
     const [editMethod, setEditMethod] = useState("cash");
+    const [editDate, setEditDate] = useState("");
+    const [editType, setEditType] = useState("");
 
     const formatCurrency = (amount: number) =>
         new Intl.NumberFormat(locale === "ar" ? "ar-OM" : "en-OM", { style: "currency", currency: "OMR", minimumFractionDigits: 1 }).format(amount);
@@ -67,6 +69,16 @@ export default function TransactionsPage() {
         setEditTotal((tx.total_amount as number) || 0);
         setEditFinal((tx.final_amount as number) || 0);
         setEditMethod((tx.payment_method as string) || "cash");
+        setEditType((tx.type as string) || "sale");
+
+        // Format ISO date string precisely to YYYY-MM-DDTHH:mm to fit the datetime-local input
+        const txDate = tx.created_at ? new Date(tx.created_at as string) : new Date();
+        const year = txDate.getFullYear();
+        const month = String(txDate.getMonth() + 1).padStart(2, '0');
+        const day = String(txDate.getDate()).padStart(2, '0');
+        const hours = String(txDate.getHours()).padStart(2, '0');
+        const minutes = String(txDate.getMinutes()).padStart(2, '0');
+        setEditDate(`${year}-${month}-${day}T${hours}:${minutes}`);
     };
 
     const handleSaveEdit = async () => {
@@ -78,7 +90,9 @@ export default function TransactionsPage() {
                 discount: editDiscount,
                 total_amount: editTotal,
                 final_amount: editFinal,
-                payment_method: editMethod
+                payment_method: editMethod,
+                type: editType,
+                created_at: editDate ? new Date(editDate).toISOString() : undefined,
             });
             setEditingId(null);
         } catch (err) {
@@ -253,47 +267,64 @@ export default function TransactionsPage() {
 
                                 {/* Inline Edit */}
                                 {isEditing && (
-                                    <div className="mt-3 pt-3 space-y-3" style={{ borderTop: "1px solid var(--color-surface-700)" }}>
-                                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-                                            <div>
-                                                <label className="text-xs mb-1 block" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "المجموع الفرعي" : "Subtotal"}</label>
-                                                <input className="input" type="number" step="0.5" dir="ltr" style={{ fontSize: "0.8rem", padding: "0.5rem" }} value={editTotal} onChange={(e) => setEditTotal(parseFloat(e.target.value) || 0)} />
+                                    <div className="p-4" style={{ borderTop: "1px solid var(--color-surface-700)", background: "var(--color-surface-800)" }}>
+                                        <div className="space-y-3 mb-3">
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div>
+                                                    <label className="text-xs mb-1 block" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "التاريخ والوقت" : "Date & Time"}</label>
+                                                    <input className="input" type="datetime-local" dir="ltr" style={{ fontSize: "0.85rem", padding: "0.5rem" }} value={editDate} onChange={(e) => setEditDate(e.target.value)} />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs mb-1 block" style={{ color: "var(--color-surface-400)" }}>{tc("type")}</label>
+                                                    <select className="input" style={{ fontSize: "0.85rem", padding: "0.5rem" }} value={editType} onChange={(e) => setEditType(e.target.value)}>
+                                                        <option value="sale">{tc("sale")}</option>
+                                                        <option value="rental_payment">{locale === "ar" ? "دفعة إيجار" : "Rental Payment"}</option>
+                                                        <option value="rental_deposit">{locale === "ar" ? "تأمين إيجار" : "Rental Deposit"}</option>
+                                                        <option value="refund">{locale === "ar" ? "استرجاع" : "Refund"}</option>
+                                                    </select>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <label className="text-xs mb-1 block" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "الخصم" : "Discount"}</label>
-                                                <input className="input" type="number" step="0.5" dir="ltr" style={{ fontSize: "0.8rem", padding: "0.5rem" }} value={editDiscount} onChange={(e) => {
-                                                    const disc = parseFloat(e.target.value) || 0;
-                                                    setEditDiscount(disc);
-                                                    setEditFinal(Math.max(0, editTotal - disc));
-                                                }} />
+                                            <div className="grid grid-cols-3 gap-2">
+                                                <div>
+                                                    <label className="text-xs mb-1 block" style={{ color: "var(--color-surface-400)" }}>{t("subtotal")}</label>
+                                                    <input className="input" type="number" dir="ltr" style={{ fontSize: "0.85rem", padding: "0.5rem" }} value={editTotal} onChange={(e) => setEditTotal(parseFloat(e.target.value) || 0)} />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs mb-1 block" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "الخصم" : "Discount"}</label>
+                                                    <input className="input" type="number" step="0.5" dir="ltr" style={{ fontSize: "0.8rem", padding: "0.5rem" }} value={editDiscount} onChange={(e) => {
+                                                        const disc = parseFloat(e.target.value) || 0;
+                                                        setEditDiscount(disc);
+                                                        setEditFinal(Math.max(0, editTotal - disc));
+                                                    }} />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs mb-1 block" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "النهائي" : "Total"}</label>
+                                                    <input className="input" type="number" step="0.5" dir="ltr" style={{ fontSize: "0.8rem", padding: "0.5rem", color: "var(--color-brand-400)", fontWeight: "bold" }} value={editFinal} onChange={(e) => setEditFinal(parseFloat(e.target.value) || 0)} />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs mb-1 block" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "طريقة الدفع" : "Payment"}</label>
+                                                    <select className="input" style={{ fontSize: "0.8rem", padding: "0.5rem" }} value={editMethod} onChange={(e) => setEditMethod(e.target.value)}>
+                                                        <option value="cash">{locale === "ar" ? "نقدي" : "Cash"}</option>
+                                                        <option value="card">{locale === "ar" ? "بطاقة" : "Card"}</option>
+                                                        <option value="transfer">{locale === "ar" ? "تحويل" : "Transfer"}</option>
+                                                    </select>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <label className="text-xs mb-1 block" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "النهائي" : "Total"}</label>
-                                                <input className="input" type="number" step="0.5" dir="ltr" style={{ fontSize: "0.8rem", padding: "0.5rem", color: "var(--color-brand-400)", fontWeight: "bold" }} value={editFinal} onChange={(e) => setEditFinal(parseFloat(e.target.value) || 0)} />
+                                            <div className="grid grid-cols-1 gap-2">
+                                                <div>
+                                                    <label className="text-xs mb-1 block" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "ملاحظات" : "Notes"}</label>
+                                                    <input className="input" style={{ fontSize: "0.8rem", padding: "0.5rem" }} value={editNotes} onChange={(e) => setEditNotes(e.target.value)} />
+                                                </div>
                                             </div>
-                                            <div>
-                                                <label className="text-xs mb-1 block" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "طريقة الدفع" : "Payment"}</label>
-                                                <select className="input" style={{ fontSize: "0.8rem", padding: "0.5rem" }} value={editMethod} onChange={(e) => setEditMethod(e.target.value)}>
-                                                    <option value="cash">{locale === "ar" ? "نقدي" : "Cash"}</option>
-                                                    <option value="card">{locale === "ar" ? "بطاقة" : "Card"}</option>
-                                                    <option value="transfer">{locale === "ar" ? "تحويل" : "Transfer"}</option>
-                                                </select>
+                                            <div className="flex gap-2 justify-end pt-1">
+                                                <button onClick={handleSaveEdit} disabled={updateTransaction.isPending} className="btn btn-sm flex items-center gap-1" style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "white" }}>
+                                                    {updateTransaction.isPending ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                                                    {tc("save")}
+                                                </button>
+                                                <button onClick={() => setEditingId(null)} className="btn btn-secondary btn-sm flex items-center gap-1">
+                                                    <X size={14} />{tc("cancel")}
+                                                </button>
                                             </div>
-                                        </div>
-                                        <div className="grid grid-cols-1 gap-2">
-                                            <div>
-                                                <label className="text-xs mb-1 block" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "ملاحظات" : "Notes"}</label>
-                                                <input className="input" style={{ fontSize: "0.8rem", padding: "0.5rem" }} value={editNotes} onChange={(e) => setEditNotes(e.target.value)} />
-                                            </div>
-                                        </div>
-                                        <div className="flex gap-2 justify-end pt-1">
-                                            <button onClick={handleSaveEdit} disabled={updateTransaction.isPending} className="btn btn-sm flex items-center gap-1" style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "white" }}>
-                                                {updateTransaction.isPending ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
-                                                {tc("save")}
-                                            </button>
-                                            <button onClick={() => setEditingId(null)} className="btn btn-secondary btn-sm flex items-center gap-1">
-                                                <X size={14} />{tc("cancel")}
-                                            </button>
                                         </div>
                                     </div>
                                 )}

@@ -322,9 +322,6 @@ export default function POSPage() {
                                     padding: "1rem",
                                     border: isInCart ? "1px solid var(--color-brand-500)" : undefined,
                                 }}>
-                                    <div className="w-full aspect-square rounded-lg mb-3 flex items-center justify-center text-3xl" style={{ background: "var(--color-surface-800)" }}>
-                                        👘
-                                    </div>
                                     <h3 className="text-sm font-semibold text-white mb-1">
                                         {locale === "ar" ? product.name_ar as string : product.name as string}
                                     </h3>

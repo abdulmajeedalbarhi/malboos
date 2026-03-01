@@ -49,6 +49,7 @@ export default function RentalsPage() {
             deposit_paid: rental.deposit_paid || 0,
             rental_fee: rental.rental_fee || 0,
             overdue_fee: rental.overdue_fee || 0,
+            start_date: rental.start_date?.split("T")[0] || "",
             due_date: rental.due_date?.split("T")[0] || "",
             returned_date: rental.returned_date?.split("T")[0] || "",
             customer_name: notes.customer_name || "",
@@ -67,6 +68,7 @@ export default function RentalsPage() {
             deposit_paid: Number(editForm.deposit_paid),
             rental_fee: Number(editForm.rental_fee),
             overdue_fee: Number(editForm.overdue_fee),
+            start_date: editForm.start_date ? new Date(editForm.start_date).toISOString() : undefined,
             due_date: editForm.due_date ? new Date(editForm.due_date).toISOString() : undefined,
             returned_date: editForm.returned_date ? new Date(editForm.returned_date).toISOString() : null,
             notes: JSON.stringify(notesObj),
@@ -212,11 +214,13 @@ export default function RentalsPage() {
                                 {/* Inline Edit */}
                                 {isEditing && (
                                     <div className="mt-3 pt-3 space-y-3" style={{ borderTop: "1px solid var(--color-surface-700)" }}>
-                                        <div className="grid grid-cols-2 gap-2">
+                                        <div className="grid grid-cols-3 gap-2">
                                             <div><label className="text-xs mb-1 block" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "الحالة" : "Status"}</label>
                                                 <select className="input" style={{ fontSize: "0.8rem", padding: "0.5rem" }} value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}>
                                                     {["booked", "active", "overdue", "returned", "completed", "cancelled"].map(s => (<option key={s} value={s}>{t(`status${s.charAt(0).toUpperCase() + s.slice(1)}`)}</option>))}
                                                 </select></div>
+                                            <div><label className="text-xs mb-1 block" style={{ color: "var(--color-surface-400)" }}>{t("startDate")}</label>
+                                                <input className="input" type="date" dir="ltr" style={{ fontSize: "0.8rem", padding: "0.5rem" }} value={editForm.start_date} onChange={(e) => setEditForm({ ...editForm, start_date: e.target.value })} /></div>
                                             <div><label className="text-xs mb-1 block" style={{ color: "var(--color-surface-400)" }}>{t("dueDate")}</label>
                                                 <input className="input" type="date" dir="ltr" style={{ fontSize: "0.8rem", padding: "0.5rem" }} value={editForm.due_date} onChange={(e) => setEditForm({ ...editForm, due_date: e.target.value })} /></div>
                                         </div>

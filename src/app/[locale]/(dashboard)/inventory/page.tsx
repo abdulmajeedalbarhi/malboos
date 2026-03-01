@@ -133,13 +133,13 @@ export default function InventoryPage() {
             </div>
 
             {/* Actions: Search and Add Item */}
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-row items-center gap-2 w-full">
                 <div className="relative flex-1">
                     <Search size={16} className="absolute top-1/2 -translate-y-1/2" style={{ color: "var(--color-surface-400)", insetInlineStart: "0.75rem" }} />
                     <input type="text" className="input" placeholder={tc("search") + "..."} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ paddingInlineStart: "2.25rem" }} />
                 </div>
-                <button className="btn btn-primary sm:w-auto w-full" onClick={openAdd}>
-                    <Plus size={18} /> {t("addItem")}
+                <button className="btn btn-primary shrink-0 whitespace-nowrap" onClick={openAdd}>
+                    <Plus size={18} /> <span className="hidden sm:inline">{t("addItem")}</span>
                 </button>
             </div>
 
