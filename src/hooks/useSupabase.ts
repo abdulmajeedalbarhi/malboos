@@ -406,8 +406,8 @@ export function useDashboardStats(branchId?: string) {
 
             // Prepare all queries
             // Count all transaction types except refunds for sales? Or all positive transactions.
-            // Let's count all transactions for "Total Sales" today
-            let salesQuery = supabase.from("transactions").select("final_amount").gte("created_at", today.toISOString());
+            // Let's count all transactions for "Total Sales"
+            let salesQuery = supabase.from("transactions").select("final_amount").eq("type", "sale");
             if (branchId) salesQuery = salesQuery.eq("branch_id", branchId);
 
             let rentalsQuery = supabase.from("rentals").select("id", { count: "exact", head: true }).eq("status", "active");
