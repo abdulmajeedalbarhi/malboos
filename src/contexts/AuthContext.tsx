@@ -5,6 +5,9 @@ import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import type { UserProfile } from "@/types/database";
 
+// Master Admin fallback ID
+const MASTER_ADMIN_EMAIL = "abdulmajeedalbarhi@gmail.com";
+
 interface AuthContextType {
     user: User | null;
     profile: UserProfile | null;
@@ -54,20 +57,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const fetchProfile = async (authUserId: string) => {
-        const { data } = await supabase
+        const { data, error } = await supabase
             .from("user_profiles")
             .select("*")
             .eq("auth_user_id", authUserId)
             .single();
 
-        setProfile(data);
+        if (error && error.code !== "PGRST116") {
+            console.error("Error fetching profile:", error);
+        }
+
+        setProfile(data || null);
+        return data;
     };
 
     const signIn = async (email: string, password: string) => {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data: authData, error } = await supabase.auth.signInWithPassword({
             email,
             password,
         });
+
+        // Auto-recovery for the master admin if their profile row was deleted
+        if (!error && authData?.user && email.toLowerCase() === MASTER_ADMIN_EMAIL) {
+            const profile = await fetchProfile(authData.user.id);
+            if (!profile) {
+                console.log("Master Admin missing profile row. Auto-healing...");
+                await supabase.from("user_profiles").insert({
+                    auth_user_id: authData.user.id,
+                    full_name: "Abdulmajeed",
+                    email: MASTER_ADMIN_EMAIL,
+                    role: "admin",
+                });
+                await fetchProfile(authData.user.id); // Reload the healed profile
+            }
+        }
+
         return { error: error?.message ?? null };
     };
 
