@@ -26,8 +26,10 @@ export default function LoginPage() {
         setError("");
         setIsLoading(true);
 
-        const syntheticEmail = `${username.trim().toLowerCase()}@malboos.local`;
-        const { error: signInError } = await signIn(syntheticEmail, password);
+        const isLegacyEmail = username.includes("@");
+        const authIdentifier = isLegacyEmail ? username.trim().toLowerCase() : `${username.trim().toLowerCase()}@malboos.local`;
+
+        const { error: signInError } = await signIn(authIdentifier, password);
 
         if (signInError) {
             setError(t("auth.loginError"));
@@ -104,7 +106,7 @@ export default function LoginPage() {
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div>
                             <label htmlFor="username" className="label">
-                                {locale === "ar" ? "اسم المستخدم" : "Username"}
+                                {locale === "ar" ? "تسجيل الدخول" : "Login UID"}
                             </label>
                             <input
                                 id="username"
