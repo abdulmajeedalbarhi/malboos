@@ -25,7 +25,8 @@ export default function ReportsPage() {
 
     // Compute stats
     const totalTransactions = transactions?.length || 0;
-    const totalSalesAmount = transactions?.filter((t: any) => t.type === "sale").reduce((sum: number, t: any) => sum + (t.final_amount || 0), 0) || 0;
+    const totalSalesAmount = transactions?.reduce((sum: number, t: any) => sum + (t.final_amount || 0), 0) || 0;
+    const totalProductSales = transactions?.filter((t: any) => t.type === "sale").reduce((sum: number, t: any) => sum + (t.final_amount || 0), 0) || 0;
     const totalRentalPayments = transactions?.filter((t: any) => t.type === "rental_payment").reduce((sum: number, t: any) => sum + (t.final_amount || 0), 0) || 0;
     const totalRefunds = transactions?.filter((t: any) => t.type === "refund").reduce((sum: number, t: any) => sum + (t.final_amount || 0), 0) || 0;
 
@@ -87,10 +88,14 @@ export default function ReportsPage() {
                 </button>
                 {expandedSection === "sales" && (
                     <div className="p-4 space-y-4">
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                             <div className="p-3 rounded-xl text-center" style={{ background: "var(--color-surface-800)" }}>
                                 <p className="text-lg font-bold text-white">{formatCurrency(totalSalesAmount)}</p>
                                 <p className="text-xs" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "إجمالي المبيعات" : "Total Sales"}</p>
+                            </div>
+                            <div className="p-3 rounded-xl text-center" style={{ background: "var(--color-surface-800)" }}>
+                                <p className="text-lg font-bold" style={{ color: "#34d399" }}>{formatCurrency(totalProductSales)}</p>
+                                <p className="text-xs" style={{ color: "var(--color-surface-400)" }}>{locale === "ar" ? "مبيعات المنتجات" : "Product Sales"}</p>
                             </div>
                             <div className="p-3 rounded-xl text-center" style={{ background: "var(--color-surface-800)" }}>
                                 <p className="text-lg font-bold" style={{ color: "#60a5fa" }}>{formatCurrency(totalRentalPayments)}</p>

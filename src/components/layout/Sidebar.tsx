@@ -72,7 +72,7 @@ export default function Sidebar() {
             )}
 
             <aside
-                className="fixed top-0 bottom-0 z-50 flex flex-col transition-all duration-300 glass"
+                className="fixed top-0 bottom-0 z-50 flex-col transition-all duration-300 glass hidden lg:flex"
                 style={{
                     width: isMobile ? "var(--sidebar-width)" : collapsed ? "var(--sidebar-collapsed-width)" : "var(--sidebar-width)",
                     insetInlineStart: isMobile ? (isMobileMenuOpen ? "0" : "-100%") : "0",

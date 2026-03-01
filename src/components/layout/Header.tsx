@@ -90,10 +90,9 @@ export default function Header() {
 
                     {/* Notification Dropdown */}
                     {showNotifications && (
-                        <div className="absolute top-full mt-2 w-72 rounded-2xl p-2 shadow-xl z-50 animate-fade-in" style={{
+                        <div className="absolute top-full mt-2 w-[calc(100vw-2rem)] sm:w-72 max-w-[320px] rounded-2xl p-2 shadow-xl z-50 animate-fade-in right-0" style={{
                             background: "var(--color-surface-800)",
                             border: "1px solid var(--color-surface-700)",
-                            insetInlineEnd: 0
                         }}>
                             <div className="flex items-center justify-between p-2 mb-1" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                                 <h3 className="text-sm font-semibold text-white">{locale === "ar" ? "الإشعارات" : "Notifications"}</h3>

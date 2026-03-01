@@ -3,11 +3,11 @@
 import React, { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTransactions, useDeleteTransaction } from "@/hooks/useSupabase";
+import { useTransactions, useDeleteTransaction, useUpdateTransaction } from "@/hooks/useSupabase";
 import { createClient } from "@/lib/supabase/client";
 import {
     Receipt, Search, ShoppingCart, CalendarClock, Banknote, CreditCard,
-    ArrowRightLeft, Loader2, Eye, Pencil, X, Check, Filter, Trash2,
+    ArrowRightLeft, Loader2, Eye, Pencil, X, Check, Filter, Trash2, ChevronDown, ChevronUp
 } from "lucide-react";
 
 const supabase = createClient();
@@ -21,9 +21,11 @@ export default function TransactionsPage() {
     const branchId = profile?.role === "admin" || profile?.role === "owner" ? undefined : profile?.branch_id ?? undefined;
     const { data: transactions, isLoading, refetch } = useTransactions(branchId);
     const deleteTransaction = useDeleteTransaction();
+    const updateTransaction = useUpdateTransaction();
 
     const [searchQuery, setSearchQuery] = useState("");
     const [typeFilter, setTypeFilter] = useState<"all" | "sale" | "rental_payment" | "rental_deposit" | "refund">("all");
+    const [expandedId, setExpandedId] = useState<string | null>(null);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editNotes, setEditNotes] = useState("");
     const [editDiscount, setEditDiscount] = useState(0);
@@ -70,19 +72,15 @@ export default function TransactionsPage() {
     const handleSaveEdit = async () => {
         if (!editingId) return;
         try {
-            const { error } = await supabase
-                .from("transactions")
-                .update({
-                    notes: editNotes,
-                    discount: editDiscount,
-                    total_amount: editTotal,
-                    final_amount: editFinal,
-                    payment_method: editMethod
-                })
-                .eq("id", editingId);
-            if (error) throw error;
+            await updateTransaction.mutateAsync({
+                id: editingId,
+                notes: editNotes,
+                discount: editDiscount,
+                total_amount: editTotal,
+                final_amount: editFinal,
+                payment_method: editMethod
+            });
             setEditingId(null);
-            refetch();
         } catch (err) {
             console.error("Edit failed:", err);
         }
@@ -167,8 +165,18 @@ export default function TransactionsPage() {
                         }
 
                         return (
-                            <div key={tx.id as string} className="card" style={{ padding: "1rem" }}>
-                                <div className="flex items-center justify-between">
+                            <div key={tx.id as string} className="card" style={{ padding: "0" }}>
+                                <div
+                                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/[0.02] transition-colors"
+                                    onClick={() => {
+                                        if (expandedId === tx.id) {
+                                            setExpandedId(null);
+                                            setEditingId(null);
+                                        } else {
+                                            setExpandedId(tx.id as string);
+                                        }
+                                    }}
+                                >
                                     <div className="flex items-center gap-3">
                                         <div className="flex items-center justify-center w-10 h-10 rounded-xl" style={{ background: typeInfo.bg }}>
                                             {type === "sale" ? <ShoppingCart size={18} style={{ color: typeInfo.color }} /> : <CalendarClock size={18} style={{ color: typeInfo.color }} />}
@@ -223,18 +231,25 @@ export default function TransactionsPage() {
                                                 <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
                                             </a>
                                         )}
-                                        {!isLocked && !isEditing && (
+                                        {expandedId === tx.id ? <ChevronUp size={16} className="ms-2" style={{ color: "var(--color-surface-400)" }} /> : <ChevronDown size={16} className="ms-2" style={{ color: "var(--color-surface-400)" }} />}
+                                    </div>
+                                </div>
+
+                                {/* Expanded View / Actions */}
+                                {expandedId === tx.id && !isEditing && (
+                                    <div className="p-4 flex gap-2 justify-end" style={{ borderTop: "1px solid var(--color-surface-700)", background: "rgba(0,0,0,0.1)" }}>
+                                        {!isLocked && (
                                             <>
-                                                <button onClick={() => handleEdit(tx)} className="p-2 rounded-lg transition-all hover:scale-105" style={{ background: "var(--color-surface-800)" }} title={locale === "ar" ? "تعديل" : "Edit"}>
-                                                    <Pencil size={14} style={{ color: "var(--color-surface-400)" }} />
+                                                <button onClick={(e) => { e.stopPropagation(); handleEdit(tx); }} className="btn btn-secondary btn-sm flex items-center gap-1">
+                                                    <Pencil size={14} /> {locale === "ar" ? "تعديل" : "Edit"}
                                                 </button>
-                                                <button onClick={() => handleDelete(tx.id as string)} className="p-2 rounded-lg transition-all hover:scale-105" style={{ background: "rgba(239, 68, 68, 0.15)", color: "#f87171" }} title={locale === "ar" ? "حذف" : "Delete"} disabled={deleteTransaction.isPending}>
-                                                    <Trash2 size={14} />
+                                                <button onClick={(e) => { e.stopPropagation(); handleDelete(tx.id as string); }} className="btn btn-sm flex items-center gap-1" style={{ background: "rgba(239, 68, 68, 0.15)", color: "#f87171" }} disabled={deleteTransaction.isPending}>
+                                                    <Trash2 size={14} /> {locale === "ar" ? "حذف" : "Delete"}
                                                 </button>
                                             </>
                                         )}
                                     </div>
-                                </div>
+                                )}
 
                                 {/* Inline Edit */}
                                 {isEditing && (
@@ -272,8 +287,9 @@ export default function TransactionsPage() {
                                             </div>
                                         </div>
                                         <div className="flex gap-2 justify-end pt-1">
-                                            <button onClick={handleSaveEdit} className="btn btn-sm flex items-center gap-1" style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "white" }}>
-                                                <Check size={14} />{tc("save")}
+                                            <button onClick={handleSaveEdit} disabled={updateTransaction.isPending} className="btn btn-sm flex items-center gap-1" style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "white" }}>
+                                                {updateTransaction.isPending ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                                                {tc("save")}
                                             </button>
                                             <button onClick={() => setEditingId(null)} className="btn btn-secondary btn-sm flex items-center gap-1">
                                                 <X size={14} />{tc("cancel")}

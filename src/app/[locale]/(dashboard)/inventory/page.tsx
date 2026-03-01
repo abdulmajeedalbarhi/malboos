@@ -130,13 +130,17 @@ export default function InventoryPage() {
                         <p className="text-sm" style={{ color: "var(--color-surface-400)" }}>{filtered.length} {locale === "ar" ? "صنف" : "items"}</p>
                     </div>
                 </div>
-                <button className="btn btn-primary" onClick={openAdd}><Plus size={18} /> {t("addItem")}</button>
             </div>
 
-            {/* Search */}
-            <div className="relative max-w-lg">
-                <Search size={16} className="absolute top-1/2 -translate-y-1/2" style={{ color: "var(--color-surface-400)", insetInlineStart: "0.75rem" }} />
-                <input type="text" className="input" placeholder={tc("search") + "..."} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ paddingInlineStart: "2.25rem" }} />
+            {/* Actions: Search and Add Item */}
+            <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                    <Search size={16} className="absolute top-1/2 -translate-y-1/2" style={{ color: "var(--color-surface-400)", insetInlineStart: "0.75rem" }} />
+                    <input type="text" className="input" placeholder={tc("search") + "..."} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ paddingInlineStart: "2.25rem" }} />
+                </div>
+                <button className="btn btn-primary sm:w-auto w-full" onClick={openAdd}>
+                    <Plus size={18} /> {t("addItem")}
+                </button>
             </div>
 
             {/* Category Pills */}

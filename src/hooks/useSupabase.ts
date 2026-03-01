@@ -242,6 +242,27 @@ export function useDeleteTransaction() {
     });
 }
 
+export function useUpdateTransaction() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ id, ...updates }: { id: string;[key: string]: any }) => {
+            const { data, error } = await supabase
+                .from("transactions")
+                .update(updates)
+                .eq("id", id)
+                .select()
+                .single();
+            if (error) throw error;
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["transactions"] });
+            queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+            queryClient.invalidateQueries({ queryKey: ["reports"] });
+        },
+    });
+}
+
 // ============================================================
 // Rentals
 // ============================================================
@@ -384,7 +405,9 @@ export function useDashboardStats(branchId?: string) {
             today.setHours(0, 0, 0, 0);
 
             // Prepare all queries
-            let salesQuery = supabase.from("transactions").select("final_amount").gte("created_at", today.toISOString()).eq("type", "sale");
+            // Count all transaction types except refunds for sales? Or all positive transactions.
+            // Let's count all transactions for "Total Sales" today
+            let salesQuery = supabase.from("transactions").select("final_amount").gte("created_at", today.toISOString());
             if (branchId) salesQuery = salesQuery.eq("branch_id", branchId);
 
             let rentalsQuery = supabase.from("rentals").select("id", { count: "exact", head: true }).eq("status", "active");
